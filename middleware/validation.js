@@ -2,6 +2,17 @@ const { body, query, param } = require("express-validator");
 
 const validator = {
     create: [
+        body("isbn")
+            .exists()
+            .withMessage("ISBN is missing")
+            .bail()
+            .notEmpty()
+            .withMessage("ISBN has to be provided")
+            .bail()
+            .isString()
+            .withMessage("ISBN has to be a number")
+            .bail()
+            .isLength({ min: 13, max: 17 }),
         body("name")
             .exists()
             .withMessage("Name is missing")
@@ -39,55 +50,59 @@ const validator = {
             .bail()
             .isLength({ min: 2, max: 50 })
             .withMessage("Category must be less than 50 characters, and more than 2 characters"),
-        body("brand")
+        body("stock")
             .exists()
-            .withMessage("Brand is missing")
+            .withMessage("Stock is missing")
             .bail()
             .notEmpty()
-            .withMessage("Brand can not be null")
-            .bail()
-            .isString()
-            .withMessage("Brand has to be a string")
-            .bail()
-            .isLength({ min: 1, max: 50 })
-            .withMessage("Description must be less than 50 characters, and more than 1 character"),
-        body("color")
-            .exists()
-            .withMessage("Color is missing")
-            .bail()
-            .notEmpty()
-            .withMessage("Color cant be null")
-            .bail()
-            .isString()
-            .withMessage("Color must be a string")
-            .bail()
-            .isLength({ min: 2, max: 50 })
-            .withMessage("Description must be less than 50 characters, and more than 2 characters"),
-        body("size")
-            .exists()
-            .withMessage("Size is missing")
-            .bail()
-            .notEmpty()
-            .withMessage("Size cant be null")
-            .bail()
-            .isString()
-            .withMessage("Size must be a string"),
-
-
-
-        body("rating")
-            .exists()
-            .withMessage("Rating was not provided")
+            .withMessage("Stock can not be null")
             .bail()
             .isNumeric()
-            .withMessage("Rating must be numeric")
+            .withMessage("Stock has to be a number")
+            .bail()
+            .isLength({ min: 1, max: 10 })
+            .withMessage("Stock must be less than 11 digits")
             .bail()
             .custom((value) => {
-                if (value <= 0 || value > 5) {
-                    throw new Error("Rating has to be greater than 0 and less than or equal to 5");
+                if (value <= 0 || value > 100000) {
+                    throw new Error("Stock cant be more than 100000");
                 }
                 return true;
             }),
+        body("author")
+            .exists()
+            .withMessage("Author is missing")
+            .bail()
+            .notEmpty()
+            .withMessage("Author cant be null")
+            .bail()
+            .isString()
+            .withMessage("Author must be a string")
+            .bail()
+            .isLength({ min: 2, max: 50 })
+            .withMessage("Author name must be less than 50 characters, and more than 2 characters"),
+        body("publisher")
+            .exists()
+            .withMessage("Publisher is missing")
+            .bail()
+            .notEmpty()
+            .withMessage("Publisher cant be null")
+            .bail()
+            .isString()
+            .withMessage("Publisher must be a string"),
+        // body("rating")
+        //     .exists()
+        //     .withMessage("Rating was not provided")
+        //     .bail()
+        //     .isNumeric()
+        //     .withMessage("Rating must be numeric")
+        //     .bail()
+        //     .custom((value) => {
+        //         if (value <= 0 || value > 5) {
+        //             throw new Error("Rating has to be greater than 0 and less than or equal to 5");
+        //         }
+        //         return true;
+        //     }),
 
     ],
 };
