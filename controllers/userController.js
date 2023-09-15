@@ -71,12 +71,28 @@ class user {
     }
     async updateReview(req, res) {
         try {
+            const { bookId } = req.body;
             const findUser = await userModel.findById({ _id: req.userId });
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "User not found!");
             }
-
-
+            const findBook = await bookModel.findById({ _id: bookId });
+            if (!findBook) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Book not found!");
+            }
+            const updateFields = {};
+            if (rating) {
+                updateFields.rating = rating;
+            }
+            if (comment) {
+                updateFields.comment = comment;
+            }
+            const findReview = await reviewModel.findOneAndUpdate(
+                { "bookId": bookId },
+                { $set: updateFields },
+                { new: true }
+            );
+            return sendResponse(res, HTTP_STATUS.OK, "Data has been updated", findReview);
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
