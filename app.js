@@ -7,14 +7,16 @@ const userModel = require("./models/users");
 const app = express();
 const myRoutes = require("./routes/Auth");
 const bookRoutes = require("./routes/book");
-
+const userRoutes = require("./routes/user");
 app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
-app.use("/user", myRoutes);
+app.use("/auth", myRoutes);
 app.use("/book", bookRoutes);
+app.use("/user", userRoutes);
 app.use(myRoutes);
 app.use(bookRoutes);
+app.use(userRoutes);
 app.use(cors({ origin: "*" }));
 
 databaseConnection(() => {

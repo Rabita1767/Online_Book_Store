@@ -94,6 +94,76 @@ class admin {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async updateBook(req, res) {
+
+        try {
+            const { id } = req.query
+            const updateFields = {};
+            if (isbn) {
+                updateFields.isbn = isbn;
+            }
+            if (name) {
+                updateFields.name = name;
+            }
+            if (price) {
+                updateFields.price = price;
+            }
+            if (category) {
+                updateFields.category = category;
+            }
+            if (stock) {
+                updateFields.stock = stock;
+            }
+            if (author) {
+                updateFields.author = author;
+            }
+            if (publisher) {
+                updateFields.publisher = publisher;
+            }
+            console.log(updateFields)
+            const updateResult = await bookModel.updateOne({ _id: id }, { $set: updateFields });
+            console.log(updateResult);
+            return sendResponse(res, HTTP_STATUS.OK, "Data updated successfully!", updateResult);
+
+        } catch (error) {
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async updateUser(req, res) {
+
+        try {
+            const { id } = req.query
+            const updateFieldsAuth = {};
+            const { name, email, phone, balance } = req.body;
+            if (name) {
+                updateFieldsAuth.name = name;
+            }
+            if (email) {
+                updateFieldsAuth.email = email;
+            }
+            if (phone) {
+                updateFieldsAuth.phone = phone;
+            }
+            if (balance) {
+                updateFieldsAuth.balance = balance;
+            }
+            if (Object.keys(updateFieldsAuth).length == 0) {
+                return sendResponse(res, HTTP_STATUS.NOT_ACCEPTABLE, "No data to update");
+            }
+
+            await authModel.updateOne({ user: id }, { $set: updateFieldsAuth });
+
+
+            await userModel.updateOne({ _id: id }, { $set: updateFieldsAuth });
+            return sendResponse(res, HTTP_STATUS.OK, "Data has been updated");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+
+
 
 }
 module.exports = new admin();

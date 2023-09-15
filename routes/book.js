@@ -9,4 +9,6 @@ routes.post("/addBook", auth.isRole, validation.create, adminController.addBook)
 routes.delete("/deleteBook/:id", auth.isRole, adminController.deleteBook);
 routes.get("/viewUser", auth.isRole, validator.validatePage, adminController.viewUserData);
 routes.delete("/deleteUser", auth.isRole, auth.isSuper, adminController.deleteUser);
+routes.post("/updateBook", auth.isRole, adminController.updateBook);
+routes.post("/updateUser", auth.auth, adminController.updateUser);
 module.exports = routes;

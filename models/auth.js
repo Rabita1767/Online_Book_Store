@@ -15,6 +15,11 @@ const authSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    confirmPassword:
+    {
+        type: String,
+        required: true
+    },
     user:
     {
         type: mongoose.Types.ObjectId,
@@ -30,7 +35,7 @@ const authSchema = new mongoose.Schema({
     superAdmin:
     {
         type: Boolean,
-        required:false,
+        required: false,
         default: false
     },
     failedLoginAttempt:

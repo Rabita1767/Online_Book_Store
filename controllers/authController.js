@@ -20,17 +20,21 @@ class Auth {
                 return res.status(400).send(failure(validation));
             }
             else {
-                const { name, email, password, phone, role, superAdmin } = req.body;
+                const { name, email, password, confirmPassword, phone, role, superAdmin } = req.body;
                 const exist = await userModel.findOne({ email: email });
                 console.log(`user ${exist}`);
                 if (exist) {
                     //return res.status(400).send(failure("User already exist!"));
                     return sendResponse(res, HTTP_STATUS.CONFLICT, "User already exist!");
                 }
+                if (password != confirmPassword) {
+                    return sendResponse(res, HTTP_STATUS.CONFLICT, "Passwords dont match!");
+                }
                 const hassedPass = await bcrypt.hash(password, 10);
+                const hassedConfirmed = await bcrypt.hash(confirmPassword, 10);
                 const user = new userModel({ name: name, email: email, phone: phone });
                 const addUser = await user.save();
-                const authUser = new authModel({ name: name, email: email, password: hassedPass, user: addUser._id, role: role, superAdmin: superAdmin });
+                const authUser = new authModel({ name: name, email: email, password: hassedPass, confirmPassword: hassedConfirmed, user: addUser._id, role: role, superAdmin: superAdmin });
                 const savedAuth = await authUser.save();
                 //const token = jwt.sign({ email: addUser.email, id: addUser._id, role: addUser.role }, SECRET_KEY, { expiresIn: "1h" });
                 // return res.status(200).send(success("Successfully signed up!", { user: savedAuth, token: token }));
@@ -132,68 +136,8 @@ class Auth {
     //         return res.status(500).send(failure("Internal Server Error!"));
     //     }
     // }
-    async review(req, res) {
-        try {
-            const { comment, productId, rating } = req.body;
-            const findUser = await userModel.findById({ _id: req.userId });
-            if (!findUser) {
-                return res.status(400).send(failure("Please log in!"));
-            }
-            const findProduct = await mangaModel.findById({ _id: productId });
-            if (!findProduct) {
-                return res.status(400).send(failure("Product not found!"));
-            }
-            const findExistingReview = await reviewModel.findOne({ $and: [{ productId: productId }, { userId: req.userId }] });
-            if (findExistingReview) {
-                const updatedReview = await reviewModel.findOneAndUpdate(
-                    { "_id": findExistingReview._id },
-                    { $set: { "comment": comment, "rating": rating } },
-                    { new: true }
-                );
-                const update = await mangaModel.find({}).populate("review");
-                return res.status(200).send(success("Review updated Successfully", update));
-            }
-            const result = new reviewModel({
-                comment: comment, productId: productId, userId: req.userId, rating: rating
-            })
-            await result.save();
-            findUser.review.push(result._id);
-            await findUser.save();
-            findProduct.review.push(result._id);
-            await findProduct.save();
-            const getProducts = await mangaModel.find({})
-                .populate("review");
-            return res.status(200).send(success("Successfully stored review", getProducts));
-        } catch (error) {
-            console.log(error);
-            return res.status(500).send(failure("Internal Server Error!"));
-        }
-    }
-    async deleteReview(req, res) {
-        try {
-            const { productId } = req.body;
-            const findUser = await userModel.findById({ _id: req.userId });
-            if (!findUser) {
-                return res.status(400).send(failure("Please log in!"));
-            }
-            const getReview = await reviewModel.findOne({ productId: productId });
-            console.log(getReview)
-            const index = findUser.review.findIndex((x) => x == getReview._id);
-            findUser.review.splice(index, 1);
-            await findUser.save();
-            const product = await mangaModel.findById({ _id: productId });
-            const productIndex = product.review.findIndex((y) => y == getReview._id)
-            product.review.splice(productIndex, 1);
-            await product.save();
-            const findReview = await reviewModel.findOneAndDelete({ $and: [{ userId: req.userId }, { productId: productId }] });
 
-            return res.status(200).send(success("Review has been deleted"))
 
-        } catch (error) {
-            console.log(error);
-            return res.status(500).send(failure("Internal Server Error!"));
-        }
-    }
 
 }
 module.exports = new Auth()
