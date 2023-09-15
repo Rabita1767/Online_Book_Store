@@ -21,10 +21,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "none"
     },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
+    // isVerified: {
+    //     type: Boolean,
+    //     default: false
+    // },
     order:
     {
         type: [mongoose.Types.ObjectId],
