@@ -27,6 +27,12 @@ const authSchema = new mongoose.Schema({
         required: false,
         default: 2
     },
+    superAdmin:
+    {
+        type: Boolean,
+        required:false,
+        default: false
+    },
     failedLoginAttempt:
     {
         type: Number,

@@ -45,6 +45,38 @@ class authentication {
                 if (decodedToken) {
 
                     req.userRole = decodedToken.role;
+                   
+                    console.log(`now ${req.userRole}`)
+                    if (req.userRole == 1) {
+                        next();
+                    }
+                    else {
+                        //res.status(400).send("Unauthorized access to this route");
+                        return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized Access");
+                    }
+
+                } else {
+                    //res.status(400).send("Invalid token!");
+                    return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Invalid token");
+                }
+            } else {
+                //res.status(400).send("Unauthorized users!");
+                return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized Users");
+            }
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    isSuper(req, res, next) {
+        try {
+            let token = req.headers.authorization;
+            if (token) {
+                token = token.split(" ")[1];
+                const decodedToken = jwt.decode(token, SECRET_KEY);
+                if (decodedToken) {
+
+                    req.userRole = decodedToken.superAdmin;
                     console.log(`now ${req.userRole}`)
                     if (req.userRole == 1) {
                         next();

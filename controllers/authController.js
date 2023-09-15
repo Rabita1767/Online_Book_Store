@@ -20,7 +20,7 @@ class Auth {
                 return res.status(400).send(failure(validation));
             }
             else {
-                const { name, email, password, phone, role } = req.body;
+                const { name, email, password, phone, role, superAdmin } = req.body;
                 const exist = await userModel.findOne({ email: email });
                 console.log(`user ${exist}`);
                 if (exist) {
@@ -30,7 +30,7 @@ class Auth {
                 const hassedPass = await bcrypt.hash(password, 10);
                 const user = new userModel({ name: name, email: email, phone: phone });
                 const addUser = await user.save();
-                const authUser = new authModel({ name: name, email: email, password: hassedPass, user: addUser._id, role: role });
+                const authUser = new authModel({ name: name, email: email, password: hassedPass, user: addUser._id, role: role, superAdmin: superAdmin });
                 const savedAuth = await authUser.save();
                 //const token = jwt.sign({ email: addUser.email, id: addUser._id, role: addUser.role }, SECRET_KEY, { expiresIn: "1h" });
                 // return res.status(200).send(success("Successfully signed up!", { user: savedAuth, token: token }));
@@ -58,7 +58,7 @@ class Auth {
             if (!pass) {
                 return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Wrong Credentials");
             }
-            const token = jwt.sign({ email: Userexist.email, id: Userexist.user._id, role: Userexist.role }, SECRET_KEY, { expiresIn: "1h" });
+            const token = jwt.sign({ email: Userexist.email, id: Userexist.user._id, role: Userexist.role, superAdmin: Userexist.superAdmin }, SECRET_KEY, { expiresIn: "1h" });
             console.log(Userexist.user._id);
             console.log(Userexist.role);
             //return res.status(200).json({ result: Userexist, token: token });
