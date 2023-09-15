@@ -2,6 +2,7 @@ const express = require("express");
 const routes = express();
 const authController = require("../controllers/authController");
 const auth = require("../middleware/auth");
+const validate = require("../middleware/custom_validator");
 const adminController = require("../controllers/adminController");
 //const { authValidator } = require("../middleware/validation");
 // const { userValidator } = require("../middleware/validation");
@@ -12,7 +13,7 @@ const adminController = require("../controllers/adminController");
 
 // routes.post("/login", AuthController.login);
 // routes.post("/sign-up", authValidator.signup, AuthController.signup);
-routes.post("/signup", authController.auth);
+routes.post("/signup", validate.validateSignup, authController.auth);
 routes.post("/login", authController.login);
 
 

@@ -18,5 +18,17 @@ class validate {
         next();
 
     }
+    async validateSignup(req, res, next) {
+        try {
+            const { role, superAdmin } = req.body;
+            if ((!role && superAdmin == true) || (role > 1 && superAdmin == true)) {
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "Unauthorized role");
+            }
+            next();
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
 }
 module.exports = new validate();
