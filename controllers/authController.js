@@ -21,7 +21,8 @@ class Auth {
             }
             else {
                 const { name, email, password, phone, role } = req.body;
-                const exist = await userModel.findOne({ email: email })
+                const exist = await userModel.findOne({ email: email });
+                console.log(`user ${exist}`);
                 if (exist) {
                     //return res.status(400).send(failure("User already exist!"));
                     return sendResponse(res, HTTP_STATUS.CONFLICT, "User already exist!");
@@ -193,6 +194,6 @@ class Auth {
             return res.status(500).send(failure("Internal Server Error!"));
         }
     }
-    
+
 }
 module.exports = new Auth()

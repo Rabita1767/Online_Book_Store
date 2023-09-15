@@ -77,6 +77,23 @@ class admin {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async deleteUser(req, res) {
+        try {
+            const { id } = req.query;
+            const findUserinUser = await userModel.findById({ _id: id });
+            const findUserinAuth = await authModel.findOne({ user: id });
+            if (findUserinUser && findUserinAuth) {
+                await userModel.deleteOne({ _id: id });
+                await authModel.deleteOne({ user: id });
+                return sendResponse(res, HTTP_STATUS.OK, "User has been deleted Successfully!");
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "User not found!");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
 
 }
 module.exports = new admin();

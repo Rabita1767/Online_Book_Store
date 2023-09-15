@@ -8,4 +8,5 @@ const validator = require("../middleware/custom_validator");
 routes.post("/addBook", auth.isRole, validation.create, adminController.addBook);
 routes.delete("/deleteBook/:id", auth.isRole, adminController.deleteBook);
 routes.get("/viewUser", auth.isRole, validator.validatePage, adminController.viewUserData);
+routes.delete("/deleteUser", auth.isRole, adminController.deleteUser);
 module.exports = routes;
