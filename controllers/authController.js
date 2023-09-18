@@ -5,6 +5,7 @@ const userModel = require("../models/users");
 // const reviewModel = require("../models/review");
 // const mangaModel = require("../models/products")
 const authModel = require("../models/auth")
+const bookModel = require("../models/book")
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const HTTP_STATUS = require("../constants/statusCode");
@@ -17,7 +18,7 @@ class Auth {
         try {
             const validation = validationResult(req).array();
             if (validation.length > 0) {
-                return res.status(400).send(failure(validation));
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "Signup failed!", validation);
             }
             else {
                 const { name, email, password, confirmPassword, phone, role, superAdmin } = req.body;
@@ -44,7 +45,6 @@ class Auth {
 
         } catch (error) {
             console.log(error)
-            //res.status(500).send(failure("Internal Server Error!"));
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
@@ -65,26 +65,13 @@ class Auth {
             const token = jwt.sign({ email: Userexist.email, id: Userexist.user._id, role: Userexist.role, superAdmin: Userexist.superAdmin }, SECRET_KEY, { expiresIn: "1h" });
             console.log(Userexist.user._id);
             console.log(Userexist.role);
-            //return res.status(200).json({ result: Userexist, token: token });
             return sendResponse(res, HTTP_STATUS.OK, "Successfully logged in", { result: Userexist, token: token });
         } catch (error) {
             console.log(error)
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
-    async userProfile(req, res) {
-        try {
-            const findUser = await userModel.findById({ _id: req.userId })
-                .populate("order");
-            if (!findUser) {
-                return res.status(400).send(failure('Please log in first!'));
-            }
-            return res.status(200).send(success("Successfully fetched data", findUser));
-        } catch (error) {
-            console.log(error);
-            return res.status(500).send(failure("Internal Server Error!"))
-        }
-    }
+
     async editProfile(req, res) {
         try {
             const { old_password, new_password } = req.body;
@@ -109,34 +96,94 @@ class Auth {
             return res.status(500).send(failure("Internal Server Error!"));
         }
     }
-    // async review(req, res) {
-    //     try {
-    //         const { comment, productId, rating } = req.body;
-    //         const findUser = await userModel.findById({ _id: req.userId });
-    //         if (!findUser) {
-    //             return res.status(400).send(failure("Please log in!"));
-    //         }
-    //         const findProduct = await mangaModel.findById({ _id: productId });
-    //         if (!findProduct) {
-    //             return res.status(400).send(failure("Product not found!"));
-    //         }
-    //         const result = new reviewModel({
-    //             comment: comment, productId: productId, userId: req.userId, rating: rating
-    //         })
-    //         await result.save();
-    //         findUser.review.push(result._id);
-    //         await findUser.save();
-    //         findProduct.review.push(result._id);
-    //         await findProduct.save();
-    //         const getProducts = await mangaModel.find({})
-    //             .populate("review");
-    //         return res.status(200).send(success("Successfully stored review", getProducts));
-    //     } catch (error) {
-    //         console.log(error);
-    //         return res.status(500).send(failure("Internal Server Error!"));
-    //     }
-    // }
 
+    async getAll(req, res) {
+        try {
+            const { isbn, name, minPrice, maxPrice, category, stock, author, publisher, discount_price, rating, search, sortParam, sortPrice } = req.query;
+            const page = req.query.page || 1;
+            const limit = req.query.limit || 5;
+            const accept = ["isbn", "name", "minPrice", "maxPrice", "category", "stock", "publisher", "rating", "search", "sortParam", "sortPrice"];
+            const wrongParam = Object.keys(req.query).filter((x) => !accept.includes(x));
+            if (wrongParam.length > 0) {
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "Request Invalid!");
+            }
+            const query = {};
+            if (isbn) {
+                query.isbn = isbn;
+            }
+            if (name) {
+                if (Array.isArray(name)) {
+                    query.name = { $in: name.map(value => new RegExp(value, "i")) }
+                }
+                else {
+                    query.name = { $regex: name, $options: "i" };
+                }
+            }
+            if (minPrice || maxPrice) {
+                query.price = {}
+                if (minPrice) {
+                    query.price.$gte = minPrice;
+                }
+                if (maxPrice) {
+                    query.price.$lte = maxPrice;
+                }
+
+            }
+            if (category) {
+                query.category = { $regex: category, $options: "i" }
+            }
+            if (stock) {
+                query.stock = { $gte: stock };
+            }
+            if (author) {
+                query.author = { $regex: author, $options: "i" };
+            }
+            if (publisher) {
+                query.publisher = { $regex: publisher, $options: "i" }
+            }
+            if (rating) {
+                query.rating = { $gte: rating };
+            }
+            if (search) {
+                query.$or = [
+                    { name: { $regex: search, $options: "i" } },
+                    { category: { $regex: search, $options: "i" } },
+                    { publisher: { $regex: search, $options: "i" } },
+                    { author: { $regex: search, $options: "i" } },
+
+                ];
+            }
+            let sortOptions = {};
+
+            if (sortParam && sortPrice) {
+                if (sortParam === "price" && (sortPrice === "asc" || sortPrice === "desc")) {
+                    sortOptions[sortParam] = sortPrice === "asc" ? 1 : -1;
+                    console.log(sortOptions)
+                    console.log(sortOptions[sortParam])
+                }
+                else if (sortParam === "rating" && (sortPrice === "asc" || sortPrice === "desc")) {
+                    sortOptions[sortParam] = sortPrice === "asc" ? 1 : -1;
+                    console.log(sortOptions)
+                    console.log(sortOptions[sortParam])
+                }
+
+            }
+            const skipContent = (parseInt(page) - 1) * parseInt(limit);
+            const book = await bookModel.find(query);
+            const filterResult = await bookModel.find(query)
+                .populate("review")
+                .sort(sortOptions)
+                .skip(skipContent)
+                .limit(limit);
+            if (filterResult.length == 0) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Book Found!");
+            }
+            return sendResponse(res, HTTP_STATUS.OK, { success: true, message: "Data fetched", data: { total: book.length, countPerPage: limit, page: page, limit: limit, result: filterResult } });
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
+        }
+    }
 
 
 }

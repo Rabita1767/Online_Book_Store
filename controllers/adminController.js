@@ -16,8 +16,12 @@ class admin {
             if (validation.length > 0) {
                 return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the book", validation);
             }
-            const { isbn, name, price, category, stock, author, publisher } = req.body;
-            const products = new bookModel({ isbn: isbn, name: name, price: price, category: category, stock: stock, author: author, publisher: publisher });
+            const { isbn, name, price, category, stock, author, publisher, discountPercentage, discountStart, discountEnd } = req.body;
+            const products = new bookModel({ isbn: isbn, name: name, price: price, category: category, stock: stock, author: author, publisher: publisher, discountPercentage: discountPercentage, discountStart: discountStart, discountEnd: discountEnd });
+            const existBook = await bookModel.findOne({ isbn: isbn })
+            if (existBook) {
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "Book isbn already exist");
+            }
             await products.save()
             return sendResponse(res, HTTP_STATUS.OK, "Successfully stored data", products);
 

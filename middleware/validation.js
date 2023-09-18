@@ -90,20 +90,6 @@ const validator = {
             .bail()
             .isString()
             .withMessage("Publisher must be a string"),
-        // body("rating")
-        //     .exists()
-        //     .withMessage("Rating was not provided")
-        //     .bail()
-        //     .isNumeric()
-        //     .withMessage("Rating must be numeric")
-        //     .bail()
-        //     .custom((value) => {
-        //         if (value <= 0 || value > 5) {
-        //             throw new Error("Rating has to be greater than 0 and less than or equal to 5");
-        //         }
-        //         return true;
-        //     }),
-
     ],
     signup: [
         body("name")

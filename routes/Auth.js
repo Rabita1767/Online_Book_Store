@@ -4,17 +4,10 @@ const authController = require("../controllers/authController");
 const auth = require("../middleware/auth");
 const validate = require("../middleware/custom_validator");
 const adminController = require("../controllers/adminController");
-const validation = require("../middleware/signup_validation");
-//const { authValidator } = require("../middleware/validation");
-// const { userValidator } = require("../middleware/validation");
+const validation = require("../middleware/validation");
 
-// routes.get("/all", UserController.getAll);
-// routes.get("/detail/:id", UserController.getOneById);
-// routes.post("/create", userValidator.create, UserController.create);
-
-// routes.post("/login", AuthController.login);
-// routes.post("/sign-up", authValidator.signup, AuthController.signup);
-routes.post("/signup", validate.validateSignup, authController.auth);
+routes.post("/signup", validation.signup, authController.auth);
 routes.post("/login", authController.login);
+routes.get("/getAll", authController.getAll);
 
 module.exports = routes;

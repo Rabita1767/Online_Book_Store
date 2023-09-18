@@ -1,6 +1,8 @@
 const userModel = require("../models/users");
 const bookModel = require("../models/book"); const authModel = require("../models/auth");
 const reviewModel = require("../models/review");
+const orderModel = require("../models/order");
+const balanceModel = require("../models/balance");
 const { sendResponse } = require("../util/common");
 const HTTP_STATUS = require("../constants/statusCode");
 class user {
@@ -13,7 +15,6 @@ class user {
             }
             const findProduct = await bookModel.findById({ _id: bookId });
             if (!findProduct) {
-                // return res.status(400).send(failure("Product not found!"));
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Book not found!");
             }
             const findExistingReview = await reviewModel.findOne({ $and: [{ bookId: bookId }, { userId: req.userId }] });
@@ -71,7 +72,7 @@ class user {
     }
     async updateReview(req, res) {
         try {
-            const { bookId } = req.body;
+            const { bookId, rating, comment } = req.body;
             const findUser = await userModel.findById({ _id: req.userId });
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "User not found!");
@@ -98,5 +99,53 @@ class user {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async userProfile(req, res) {
+        try {
+            const findUser = await userModel.findById({ _id: req.userId })
+                .populate("order")
+                .populate("review");
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up!");
+            }
+
+            return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findUser);
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async addBalance(req, res) {
+        try {
+            const { balance, currency } = req.body;
+            const findUser = await userModel.findById({ _id: req.userId });
+            const findAuth = await authModel.findOne({ user: req.userId });
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
+            }
+            if (balance <= 10 || balance >= 1000) {
+                const result = new balanceModel({
+                    userId: req.userId, amount: balance, currency: currency
+                })
+                result.status = "failed";
+                await result.save();
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add amount!");
+            }
+            const result = new balanceModel({
+                userId: req.userId, amount: balance, currency: currency
+            })
+            result.status = "completed";
+            await result.save();
+            findUser.balance += balance;
+            findAuth.balance += balance;
+            await findUser.save();
+            await findAuth.save();
+            return sendResponse(res, HTTP_STATUS.OK, "Successfully added balance to your wallet!", findUser);
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+
+    }
+
 }
 module.exports = new user();
