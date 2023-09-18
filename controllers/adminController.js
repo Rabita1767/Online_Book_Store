@@ -7,6 +7,7 @@ const HTTP_STATUS = require("../constants/statusCode");
 const { validationResult } = require("express-validator");
 const validate = require("../middleware/custom_validator");
 const { sendResponse } = require("../util/common");
+const { name } = require("ejs");
 //const validate = require("../middleware/validation")
 const SECRET_KEY = "myapi";
 class admin {
@@ -161,6 +162,31 @@ class admin {
             await userModel.updateOne({ _id: id }, { $set: updateFieldsAuth });
             return sendResponse(res, HTTP_STATUS.OK, "Data has been updated");
 
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async updateDiscount(req, res) {
+        try {
+            const { id, discountPercentage, discountStart, discountEnd } = req.body;
+            const findProduct = await bookModel.findOne({ _id: id });
+            if (!findProduct) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Book not found!");
+            }
+            const query = {}
+            if (discountPercentage) {
+                query.discountPercentage = discountPercentage;
+            }
+            if (discountStart) {
+                query.discountStart = discountStart;
+            }
+            if (discountEnd) {
+                query.discountEnd = discountEnd;
+            }
+            console.log(query.discountStart)
+            const updatedDiscount = await bookModel.updateOne({ "_id": id }, { $set: query })
+            return sendResponse(res, HTTP_STATUS.OK, "Discount has been updated", updatedDiscount)
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");

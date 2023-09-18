@@ -102,6 +102,7 @@ class Auth {
             const { isbn, name, minPrice, maxPrice, category, stock, author, publisher, discount_price, rating, search, sortParam, sortPrice } = req.query;
             const page = req.query.page || 1;
             const limit = req.query.limit || 5;
+            const currentDate = new Date();
             const accept = ["isbn", "name", "minPrice", "maxPrice", "category", "stock", "publisher", "rating", "search", "sortParam", "sortPrice"];
             const wrongParam = Object.keys(req.query).filter((x) => !accept.includes(x));
             if (wrongParam.length > 0) {
@@ -182,6 +183,16 @@ class Auth {
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
+        }
+    }
+    async discountGetAll(req, res) {
+        try {
+            const book=await bookModel.find({});
+            
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
 

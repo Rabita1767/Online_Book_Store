@@ -11,4 +11,5 @@ routes.get("/viewUser", auth.isRole, validator.validatePage, adminController.vie
 routes.delete("/deleteUser", auth.isRole, auth.isSuper, adminController.deleteUser);
 routes.post("/updateBook", auth.isRole, adminController.updateBook);
 routes.post("/updateUser", auth.auth, adminController.updateUser);
+routes.post("/updateDiscount", auth.auth, adminController.updateDiscount);
 module.exports = routes;

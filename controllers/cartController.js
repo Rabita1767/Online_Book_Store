@@ -450,7 +450,7 @@ class cart {
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
             }
-            const findCart = await cartModel.findOne({ user: req.userId });
+            const findCart = await cartModel.findOne({ user: req.userId })
             if (!findCart) {
                 return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Cart not found!");
             }
