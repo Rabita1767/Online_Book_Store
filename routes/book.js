@@ -14,4 +14,5 @@ routes.post("/updateUser", auth.auth, adminController.updateUser);
 routes.post("/addDiscount", auth.auth, adminController.addDiscount);
 routes.post("/updateDiscount", auth.auth, adminController.updateDiscount);
 routes.get("/viewAllTransaction", auth.auth, auth.isRole, auth.isSuper, adminController.viewAllTransaction);
+routes.post("/updateProfile", auth.auth, adminController.updateProfile);
 module.exports = routes;

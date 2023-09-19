@@ -247,6 +247,41 @@ class admin {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async updateProfile(req, res) {
+        try {
+            const { name, email, phone } = req.body;
+            const query = {};
+            const findUser = await userModel.findById({ _id: req.userId });
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
+            }
+            if (name) {
+                query.name = name;
+            }
+            if (email) {
+                query.email = email;
+                const findEmail = await userModel.findOne({ email: email })
+                if (findEmail && findEmail._id != req.userId) {
+                    console.log(`email id ${findEmail._id}`)
+                    return sendResponse(res, HTTP_STATUS.SERVICE_UNAVAILABLE, "Email already registered")
+                }
+            }
+            if (phone) {
+                query.phone = phone;
+                const findPhone = await userModel.findOne({ phone: phone })
+                if (findPhone && findPhone._id != req.userId) {
+                    return sendResponse(res, HTTP_STATUS.SERVICE_UNAVAILABLE, "Phone number already registered")
+                }
+            }
+            const updatedProfile = await userModel.updateOne({ _id: req.userId }, { $set: query })
+            return sendResponse(res, HTTP_STATUS.OK, "Profile updated Successfully", updatedProfile);
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+
 
 
 

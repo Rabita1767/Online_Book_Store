@@ -72,31 +72,6 @@ class Auth {
         }
     }
 
-    async editProfile(req, res) {
-        try {
-            const { old_password, new_password } = req.body;
-            const findUser = await userModel.findById({ _id: req.userId });
-            const findAuthUser = await authModel.findOne({ user: req.userId });
-            console.log(findUser);
-            console.log(findAuthUser);
-            if (!findUser) {
-                return res.status(400).send(failure("Please Log in first"));
-            }
-            const check = await bcrypt.compare(old_password, findAuthUser.password);
-            if (check) {
-                const hashedNewPass = await bcrypt.hash(new_password, 10);
-                findAuthUser.password = hashedNewPass;
-                await findAuthUser.save();
-                await findUser.save();
-                return res.status(200).send(success("Password has been updated", findAuthUser));
-            }
-            return res.status(400).send(success("Please try again later"));
-        } catch (error) {
-            console.log(error);
-            return res.status(500).send(failure("Internal Server Error!"));
-        }
-    }
-
     async getAll(req, res) {
         try {
             const { isbn, name, minPrice, maxPrice, category, stock, author, publisher, discount_price, rating, search, sortParam, sortPrice } = req.query;
