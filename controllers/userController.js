@@ -3,6 +3,7 @@ const bookModel = require("../models/book"); const authModel = require("../model
 const reviewModel = require("../models/review");
 const orderModel = require("../models/order");
 const balanceModel = require("../models/balance");
+const transactionModel = require("../models/transaction");
 const { sendResponse } = require("../util/common");
 const HTTP_STATUS = require("../constants/statusCode");
 class user {
@@ -24,8 +25,16 @@ class user {
                     { $set: { "comment": comment, "rating": rating } },
                     { new: true }
                 );
+                const findProductReview = await reviewModel.find({ bookId: bookId })
+                //const findBook = await bookModel.findById({ _id: bookId });
+                let rate = 0;
+                findProductReview.map((x) => {
+                    rate += x.rating;
+                })
+                findProduct.rating = rate;
+                await findProduct.save();
+
                 const update = await bookModel.find({}).populate("review");
-                // return res.status(200).send(success("Review updated Successfully", update));
                 return sendResponse(res, HTTP_STATUS.OK, "Updated Successfully", update);
             }
             const result = new reviewModel({
@@ -35,6 +44,13 @@ class user {
             findUser.review.push(result._id);
             await findUser.save();
             findProduct.review.push(result._id);
+            const findProductReview = await reviewModel.find({ bookId: bookId })
+            // const findBook = await bookModel.findById({ _id: bookId });
+            let rate = 0;
+            findProductReview.map((x) => {
+                rate += x.rating;
+            })
+            findProduct.rating = rate;
             await findProduct.save();
             const getProducts = await bookModel.find({})
                 .populate("review");
@@ -145,6 +161,23 @@ class user {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
 
+    }
+    async viewTrasaction(req, res) {
+        try {
+            const findUser = await userModel.findById({ _id: req.userId });
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up!");
+            }
+            const findTransaction = await transactionModel.findOne({ user: req.userId });
+            if (!findTransaction) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Requet invalid!");
+            }
+            return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findTransaction);
+
+        } catch (error) {
+            console.log(error)
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
     }
 
 }

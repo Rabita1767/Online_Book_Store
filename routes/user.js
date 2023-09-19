@@ -8,4 +8,5 @@ routes.delete("/deleteReview", auth.auth, auth.isUser, userController.deleteRevi
 routes.patch("/updateReview", auth.auth, auth.isUser, userController.updateReview);
 routes.get("/viewProfile", auth.auth, userController.userProfile);
 routes.post("/addBalance", auth.auth, auth.isUser, userController.addBalance);
+routes.get("/viewTransaction", auth.auth, auth.isUser, userController.viewTrasaction);
 module.exports = routes;

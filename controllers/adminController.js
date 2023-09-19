@@ -1,6 +1,8 @@
 const userModel = require("../models/users");
 const bookModel = require("../models/book");
-const authModel = require("../models/auth")
+const authModel = require("../models/auth");
+const discountModel = require("../models/discount");
+const transactionModel = require("../models/transaction");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const HTTP_STATUS = require("../constants/statusCode");
@@ -167,14 +169,45 @@ class admin {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async addDiscount(req, res) {
+        try {
+            const { id, discountPercentage, discountStart, discountEnd } = req.body;
+            const findProduct = await bookModel.findById({ _id: id });
+            if (!findProduct) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Product not found!");
+            }
+            const findDiscount = await discountModel.findOne({ productId: id });
+            if (discountPercentage > 60) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Cant process request!");
+            }
+            if (!findDiscount) {
+                const result = new discountModel({
+                    productId: id, discountPercentage: discountPercentage, discountStart: discountStart, discountEnd: discountEnd
+                })
+                result.price = findProduct.price;
+                result.discountPrice = result.price - (result.price * (result.discountPercentage / 100));
+                await result.save();
+                findProduct.discountPercentage = result.discountPercentage;
+                findProduct.discountStart = result.discountStart;
+                findProduct.discountEnd = result.discountEnd;
+                await findProduct.save();
+                return sendResponse(res, HTTP_STATUS.OK, "Successfully stored data", result);
+            }
+
+        } catch (error) {
+            console.log(`error now ${error}`)
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error");
+        }
+    }
     async updateDiscount(req, res) {
         try {
             const { id, discountPercentage, discountStart, discountEnd } = req.body;
-            const findProduct = await bookModel.findOne({ _id: id });
-            if (!findProduct) {
-                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Book not found!");
+            const findDiscount = await discountModel.findOne({ productId: id });
+            const findProduct = await bookModel.findById({ _id: id });
+            if (!findDiscount) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Not found!");
             }
-            const query = {}
+            const query = {};
             if (discountPercentage) {
                 query.discountPercentage = discountPercentage;
             }
@@ -184,9 +217,26 @@ class admin {
             if (discountEnd) {
                 query.discountEnd = discountEnd;
             }
-            console.log(query.discountStart)
-            const updatedDiscount = await bookModel.updateOne({ "_id": id }, { $set: query })
-            return sendResponse(res, HTTP_STATUS.OK, "Discount has been updated", updatedDiscount)
+            const updatedResult = await discountModel.updateOne({ productId: id }, { $set: query });
+            updatedResult.discountPrice = updatedResult.price - (updatedResult.price * (updatedResult.discountPercentage / 100));
+            await updatedResult.save();
+            await bookModel.updateOne({ _id: id }, { $set: query })
+            return sendResponse(res, HTTP_STATUS.OK, "Discount updatd successfully!", updatedResult);
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async viewAllTransaction(req, res) {
+        try {
+            const findUser = await userModel.findById({ _id: req.userId })
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
+            }
+            const view = await transactionModel.find({}).populate("user");
+            return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", view)
+
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");

@@ -2,6 +2,7 @@ const userModel = require("../models/users");
 const bookModel = require("../models/book");
 const cartModel = require("../models/cart");
 const transactionModel = require("../models/transaction");
+const discountModel = require("../models/discount");
 const authModel = require("../models/auth");
 const reviewModel = require("../models/review");
 const orderModel = require("../models/order")
@@ -36,7 +37,6 @@ class cart {
                     createCart.totalPrice = total;
                     console.log(`cart total: ${createCart.totalPrice}`)
                     createCart.save();
-                    //return res.status(200).send(success("New cart has been created", createCart))
                     return sendResponse(res, HTTP_STATUS.OK, "New cart has been created", createCart);
                 }
                 total += quantity * findProduct.price;
@@ -156,293 +156,7 @@ class cart {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
-    // async checkout(req, res) {
-    //     try {
-    //         const { id } = req.body
-    //         const currentDate = new Date();
-    //         const findUser = await userModel.findById({ _id: req.userId })
-    //         const findAuth = await authModel.findOne({ user: req.userId });
-    //         if (!findUser) {
-    //             return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in");
-    //         }
-    //         const findTransaction = await transactionModel.findOne({ user: req.userId });
-    //         const findCart = await cartModel.findOne({ user: req.userId });
-    //         if (!findCart) {
-    //             return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No cart found!");
-    //         }
-    //         if (findUser.balance < findCart.totalPrice) {
-    //             return sendResponse(res, HTTP_STATUS.CONFLICT, "Faied to checkout.Not enough balance!");
-    //         }
-    //         if (!findTransaction) {
-    //             if (findCart.products.length == 0) {
-    //                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Your cart is empty!Please add some products!");
-    //             }
-    //             const checkout = new transactionModel({
-    //                 user: req.userId, products: findCart.products, cart: findCart._id, totalPrice: findCart.totalPrice
-    //             })
 
-    //             findCart.products.map(async (x) => {
-    //                 const findProduct = await bookModel.findOne({ _id: x.p_id })
-    //                 if (findProduct.stock < x.quantity) {
-    //                     return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock");
-    //                 }
-    //                 if (findCart.createdAt < findProduct.discountStart && (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd)) {
-    //                     findProduct.price -= findProduct.price * (findProduct.discountPercentage / 10);
-    //                     findCart.totalPrice += findProduct.price * x.quantity;
-    //                     checkout.totalPrice = findCart.totalPrice;
-    //                     await checkout.save();
-    //                     findCart.products = [];
-    //                     findCart.totalPrice = 0;
-    //                     await findCart.save();
-    //                     findProduct.stock -= x.quantity;
-    //                     await findProduct.save();
-    //                     const order = new orderModel({
-    //                         user: req.userId, products: checkout.products, cart: findCart._id, totalPrice: checkout.totalPrice
-    //                     })
-    //                     await order.save();
-    //                     findUser.order.push(order._id);
-    //                     findUser.balance -= checkout.totalPrice;
-    //                     await findUser.save();
-    //                     findAuth.balance = findUser.balance;
-    //                     await findAuth.save();
-    //                     return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", checkout)
-    //                 }
-    //                 else if ((findCart.createdAt >= findProduct.discountStart && findCart.createdAt <= findProduct.discountEnd) && (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd)) {
-    //                     await checkout.save();
-    //                     findCart.products = [];
-    //                     findCart.totalPrice = 0;
-    //                     await findCart.save();
-    //                     findProduct.stock -= x.quantity;
-    //                     await findProduct.save();
-    //                     const order = new orderModel({
-    //                         user: req.userId, products: checkout.products, cart: findCart._id, totalPrice: checkout.totalPrice
-    //                     })
-    //                     await order.save();
-    //                     findUser.order.push(order._id);
-    //                     findUser.balance -= checkout.totalPrice;
-    //                     await findUser.save();
-    //                     findAuth.balance = findUser.balance;
-    //                     await findAuth.save();
-    //                     return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", checkout)
-    //                 }
-    //                 else {
-    //                     await checkout.save();
-    //                     findCart.products = [];
-    //                     findCart.totalPrice = 0;
-    //                     await findCart.save();
-    //                     findProduct.stock -= x.quantity;
-    //                     await findProduct.save();
-    //                     const order = new orderModel({
-    //                         user: req.userId, products: checkout.products, cart: findCart._id, totalPrice: checkout.totalPrice
-    //                     })
-    //                     await order.save();
-    //                     findUser.order.push(order._id);
-    //                     findUser.balance -= checkout.totalPrice;
-    //                     await findUser.save();
-    //                     findAuth.balance = findUser.balance;
-    //                     await findAuth.save();
-    //                     return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", checkout)
-    //                 }
-
-    //             })
-    //         }
-    //         if (findCart.products.length == 0) {
-    //             return sendResponse(res, HTTP_STATUS.CONFLICT, "Your cart is empty!Please add some products!")
-    //         }
-    //         findCart.products.map(async (x) => {
-    //             const findProduct = await bookModel.findOne({ _id: x.p_id })
-    //             if (findProduct.stock < x.quantity) {
-    //                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock")
-    //             }
-    //             if (findCart.createdAt < findProduct.discountStart && (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd)) {
-    //                 findProduct.price -= findProduct.price * (findProduct.discountPercentage / 10);
-    //                 findCart.totalPrice += findProduct.price * x.quantity;
-    //                 const updatedCart = await transactionModel.findOneAndUpdate(
-    //                     { "user": req.userId },
-    //                     { $set: { products: findCart.products, totalPrice: findCart.totalPrice } },
-    //                     { new: true }
-    //                 );
-    //                 console.log(`here ${updatedCart.products}`);
-    //                 const order = new orderModel({
-    //                     user: req.userId, products: updatedCart.products, cart: findCart._id, totalPrice: updatedCart.totalPrice
-    //                 })
-    //                 await order.save();
-    //                 findUser.order.push(order._id);
-    //                 findUser.balance -= order.totalPrice;
-    //                 await findUser.save();
-    //                 findAuth.balance = findUser.balance;
-    //                 await findAuth.save();
-    //                 findCart.products = [];
-    //                 findCart.totalPrice = 0;
-    //                 await findCart.save();
-    //                 findProduct.stock -= x.quantity;
-    //                 await findProduct.save();
-    //                 return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", updatedCart)
-
-    //             }
-    //             else if ((findCart.createdAt >= findProduct.discountStart && findCart.createdAt <= findProduct.discountEnd) && (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd)) {
-    //                 const updatedCart = await transactionModel.findOneAndUpdate(
-    //                     { "user": req.userId },
-    //                     { $set: { products: findCart.products, totalPrice: findCart.totalPrice } },
-    //                     { new: true }
-    //                 );
-    //                 //console.log(`here ${updatedCart.products}`);
-    //                 const order = new orderModel({
-    //                     user: req.userId, products: updatedCart.products, cart: findCart._id, totalPrice: updatedCart.totalPrice
-    //                 })
-    //                 await order.save();
-    //                 findUser.order.push(order._id);
-    //                 findUser.balance -= order.totalPrice;
-    //                 await findUser.save();
-    //                 findAuth.balance = findUser.balance;
-    //                 await findAuth.save();
-    //                 findCart.products = [];
-    //                 findCart.totalPrice = 0;
-    //                 await findCart.save();
-    //                 findProduct.stock -= x.quantity;
-    //                 await findProduct.save();
-    //                 return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", updatedCart)
-    //             }
-    //             else {
-    //                 const updatedCart = await transactionModel.findOneAndUpdate(
-    //                     { "user": req.userId },
-    //                     { $set: { products: findCart.products, totalPrice: findCart.totalPrice } },
-    //                     { new: true }
-    //                 );
-    //                 console.log(`here ${updatedCart.products}`);
-    //                 const order = new orderModel({
-    //                     user: req.userId, products: updatedCart.products, cart: findCart._id, totalPrice: updatedCart.totalPrice
-    //                 })
-    //                 await order.save();
-    //                 findUser.order.push(order._id);
-    //                 findUser.balance -= order.totalPrice;
-    //                 await findUser.save();
-    //                 findAuth.balance = findUser.balance;
-    //                 await findAuth.save();
-    //                 findCart.products = [];
-    //                 findCart.totalPrice = 0;
-    //                 await findCart.save();
-    //                 findProduct.stock -= x.quantity;
-    //                 await findProduct.save();
-    //                 return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", updatedCart)
-    //             }
-
-
-    //         })
-
-    //     } catch (error) {
-    //         console.log(error);
-    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error!')
-    //     }
-    // }
-    // async checkout(req, res) {
-    //     try {
-    //         const { id } = req.body
-    //         const currentDate = new Date();
-    //         const findUser = await userModel.findById({ _id: req.userId })
-    //         const findAuth = await authModel.findOne({ user: req.userId });
-    //         if (!findUser) {
-    //             return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in");
-    //         }
-    //         const findTransaction = await transactionModel.findOne({ user: req.userId });
-    //         const findCart = await cartModel.findOne({ user: req.userId });
-    //         if (!findCart) {
-    //             return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No cart found!");
-    //         }
-    //         if (findUser.balance < findCart.totalPrice) {
-    //             return sendResponse(res, HTTP_STATUS.CONFLICT, "Faied to checkout.Not enough balance!");
-    //         }
-    //         if (!findTransaction) {
-    //             if (findCart.products.length == 0) {
-    //                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Your cart is empty!Please add some products!");
-    //             }
-    //             const checkout = new transactionModel({
-    //                 user: req.userId, products: findCart.products, cart: findCart._id, totalPrice: findCart.totalPrice
-    //             })
-
-    //             findCart.products.map(async (x) => {
-    //                 const findProduct = await bookModel.findOne({ _id: x.p_id })
-    //                 if (findProduct.stock < x.quantity) {
-    //                     return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock");
-    //                 }
-    //                 if (findCart.createdAt < findProduct.discountStart && (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd)) {
-    //                     findProduct.price -= (findProduct.price * (findProduct.discountPercentage / 10));
-    //                     console.log(`price ${findProduct.price}`)
-    //                     findCart.totalPrice += findProduct.price * x.quantity;
-    //                     console.log(`Totalprice ${findCart.totalPrice}`)
-    //                     await findCart.save();
-    //                     checkout.totalPrice = findCart.totalPrice;
-    //                     await checkout.save();
-    //                     findCart.products = [];
-    //                     findCart.totalPrice = 0;
-    //                     await findCart.save();
-    //                     findProduct.stock -= x.quantity;
-    //                     await findProduct.save();
-    //                     const order = new orderModel({
-    //                         user: req.userId, products: checkout.products, cart: findCart._id, totalPrice: checkout.totalPrice
-    //                     })
-    //                     await order.save();
-    //                     findUser.order.push(order._id);
-    //                     findUser.balance -= checkout.totalPrice;
-    //                     await findUser.save();
-    //                     findAuth.balance = findUser.balance;
-    //                     await findAuth.save();
-    //                     return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", checkout)
-    //                 }
-    //                 await checkout.save();
-    //                 findCart.products = [];
-    //                 findCart.totalPrice = 0;
-    //                 await findCart.save();
-    //                 findProduct.stock -= x.quantity;
-    //                 await findProduct.save();
-    //                 const order = new orderModel({
-    //                     user: req.userId, products: checkout.products, cart: findCart._id, totalPrice: checkout.totalPrice
-    //                 })
-    //                 await order.save();
-    //                 findUser.order.push(order._id);
-    //                 findUser.balance -= checkout.totalPrice;
-    //                 await findUser.save();
-    //                 findAuth.balance = findUser.balance;
-    //                 await findAuth.save();
-    //                 return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", checkout)
-    //             })
-    //         }
-    //         if (findCart.products.length == 0) {
-    //             return sendResponse(res, HTTP_STATUS.CONFLICT, "Your cart is empty!Please add some products!")
-    //         }
-    //         findCart.products.map(async (x) => {
-    //             const findProduct = await bookModel.findOne({ _id: x.p_id })
-    //             if (findProduct.stock < x.quantity) {
-    //                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock")
-    //             }
-    //             const updatedCart = await transactionModel.findOneAndUpdate(
-    //                 { "user": req.userId },
-    //                 { $set: { products: findCart.products, totalPrice: findCart.totalPrice } },
-    //                 { new: true }
-    //             );
-    //             //console.log(`here ${updatedCart.products}`);
-    //             const order = new orderModel({
-    //                 user: req.userId, products: updatedCart.products, cart: findCart._id, totalPrice: updatedCart.totalPrice
-    //             })
-    //             await order.save();
-    //             findUser.order.push(order._id);
-    //             findUser.balance -= order.totalPrice;
-    //             await findUser.save();
-    //             findAuth.balance = findUser.balance;
-    //             await findAuth.save();
-    //             findCart.products = [];
-    //             findCart.totalPrice = 0;
-    //             await findCart.save();
-    //             findProduct.stock -= x.quantity;
-    //             await findProduct.save();
-    //             return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", updatedCart)
-    //         })
-
-    //     } catch (error) {
-    //         console.log(error);
-    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error!')
-    //     }
-    // }
     async viewCart(req, res) {
         try {
             const currentDate = new Date();
@@ -491,187 +205,122 @@ class cart {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
-    // async viewCart(req, res) {
-    //     try {
-    //         const currentDate = new Date();
-    //         const findUser = await userModel.findById({ _id: req.userId });
-    //         if (!findUser) {
-    //             return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
-    //         }
-    //         const findCart = await cartModel.findOne({ user: req.userId });
-    //         if (!findCart) {
-    //             return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Cart not found!");
-    //         }
-    //         if (findCart.status == false) {
-    //             let total = 0;
-    //             const productIds = findCart.products.map(x => x.p_id);
-    //             console.log(`product ids: ${productIds}`);
-    //             const findProducts = await bookModel.find({ _id: { $in: productIds } });
-    //             console.log(`matched products from book model: ${findProducts}`);
 
-    //             for (const cartProduct of findCart.products) {
-    //                 const matchingProduct = findProducts.find(product => product._id == cartProduct.p_id);
-    //                 if (matchingProduct) {
-    //                     if (currentDate > matchingProduct.discountEnd || currentDate < matchingProduct.discountStart) {
-    //                         console.log(`no discount applied`);
-    //                         total += matchingProduct.price * cartProduct.quantity;
-    //                         findCart.totalPrice = total;
-    //                         await findCart.save();
-    //                         return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
-    //                     } else {
-    //                         console.log(`discount applied`);
-    //                         let updatedPrice = matchingProduct.price;
-    //                         updatedPrice -= updatedPrice * (matchingProduct.discountPercentage / 100);
-    //                         total += updatedPrice * cartProduct.quantity;
-    //                         findCart.totalPrice = total;
-    //                         await findCart.save();
-    //                         return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
-    //                     }
-    //                 }
-    //             }
-
-
-
-
-    //         }
-    //     } catch (error) {
-    //         console.log(error);
-    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
-    //     }
-    // }
-
-    // async checkout(req, res) {
-    //     const currentDate = new Date();
-    //     const findUser = await userModel.findById({ _id: req.userId });
-    //     const findAuth = await authModel.findOne({ user: req.userId });
-    //     if (!findUser) {
-    //         return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up!");
-    //     }
-    //     const findCart = await cartModel.findOne({ user: req.userId });
-    //     if (!findCart) {
-    //         return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Add cart!");
-    //     }
-    //     const findTransaction = await transactionModel.findOne({ user: req.userId });
-    //     if (!findTransaction) {
-    //         const checkout = new transactionModel({
-    //             cart: findCart._id, user: findCart.user, products: findCart.products
-    //         })
-    //         findCart.products.map(async (x) => {
-    //             const findProduct = await bookModel.findOne({ _id: x.p_id })
-    //             console.log(findProduct)
-    //             console.log(`yoo ${findProduct.stock}`);
-    //             console.log(`yooooo ${x.quantity}`)
-    //             if (findProduct.stock < x.quantity) {
-    //                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock");
-    //             }
-    //             if (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd) {
-    //                 const updatedPrice = findProduct.price - (findProduct.price * (findProduct.discountPercentage / 100));
-    //                 console.log(`price ${findProduct.price}`)
-    //                 checkout.totalPrice += updatedPrice * x.quantity;
-    //                 if (findUser.balance < checkout.totalPrice) {
-    //                     return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Please add balance to your wallet!");
-    //                 }
-    //                 await checkout.save();
-    //                 findCart.products = [];
-    //                 findCart.totalPrice = 0;
-    //                 await findCart.save();
-    //                 findUser.balance -= checkout.totalPrice;
-    //                 await findUser.save();
-    //                 findAuth.balance = findUser.balance;
-    //                 await findAuth.save();
-    //                 findProduct.stock -= x.quantity;
-    //                 await findProduct.save();
-    //                 console.log(`whyy ${updatedPrice}`)
-    //                 return sendResponse(res, HTTP_STATUS.OK, "Added checkout", checkout);
-    //             }
-    //             checkout.totalPrice += findProduct.price * x.quantity;
-    //             if (findUser.balance < checkout.totalPrice) {
-    //                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Please add balance to your wallet!");
-    //             }
-    //             await checkout.save();
-    //             findCart.products = [];
-    //             findCart.totalPrice = 0;
-    //             await findCart.save();
-    //             findUser.balance -= checkout.totalPrice;
-    //             await findUser.save();
-    //             findAuth.balance = findUser.balance;
-    //             await findAuth.save();
-    //             findProduct.stock -= x.quantity;
-    //             await findProduct.save();
-    //             return sendResponse(res, HTTP_STATUS.OK, "Added doneee", checkout);
-    //         })
-    //     }
-    // }
     async checkout(req, res) {
         try {
-            const { id } = req.body
-            const findUser = await userModel.findById({ _id: req.userId })
+            const currentDate = new Date();
+            const findUser = await userModel.findById({ _id: req.userId });
             if (!findUser) {
-                return res.status(400).send(failure("Please log in!"));
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
+            }
+            const findCart = await cartModel.findOne({ user: req.userId });
+            if (!findCart) {
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "Cart not found!");
             }
             const findTransaction = await transactionModel.findOne({ user: req.userId });
-            const findCart = await cartModel.findOne({ user: req.userId });
+            const productIds = findCart.products.map(x => x.p_id);
+            const findDiscount = await discountModel.find({
+                productId
+                    : { $in: productIds }
+            });
             if (!findTransaction) {
-                if (findCart.products.length == 0) {
-                    // return res.status(400).send(failure("Your cart is empty!Please add some products!"));
-                    return sendResponse(res, HTTP_STATUS.CONFLICT, "Your cart is empty!Please add some products!");
-                }
-                const checkout = new transactionModel({
-                    user: req.userId, products: findCart.products, cart: findCart._id, totalPrice: findCart.totalPrice
+                const result = new transactionModel({
+                    cart: findCart._id, user: findCart.user, products: findCart.products
                 })
-
+                let total = 0;
                 findCart.products.map(async (x) => {
-                    const findProduct = await mangaModel.findOne({ _id: x.p_id })
-                    if (findProduct.stock < x.quantity) {
-                        // return res.status(400).send(failure("Checkout failed!Not enough stock"));
-                        return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock")
-                    }
-                    await checkout.save();
-                    findCart.products = [];
-                    findCart.totalPrice = 0;
-                    await findCart.save();
-                    findProduct.stock -= x.quantity;
-                    await findProduct.save();
-                    const order = new orderModel({
-                        user: req.userId, products: checkout.products, cart: findCart._id, totalPrice: checkout.totalPrice
+                    findDiscount.map(async (item) => {
+                        if (item.productId.toString() == x.p_id.toString()) {
+                            if (currentDate >= item.discountStart && currentDate <= item.discountEnd) {
+                                total += item.discountPrice * x.quantity;
+                            }
+                            else {
+                                total += item.price * x.quantity;
+                            }
+                        }
                     })
-                    await order.save();
-                    findUser.order.push(order._id);
-                    await findUser.save();
-                    // return res.status(200).send(success("Successfully checked out", checkout));
-                    return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", checkout)
                 })
-            }
-            if (findCart.products.length == 0) {
-                // return res.status(400).send(failure("Your cart is empty!Please add some products!"));
-                return sendResponse(res, HTTP_STATUS.CONFLICT, "Your cart is empty!Please add some products!")
-            }
-            findCart.products.map(async (x) => {
-                const findProduct = await mangaModel.findOne({ _id: x.p_id })
-                if (findProduct.stock < x.quantity) {
-                    // return res.status(400).send(failure("Checkout failed!Not enough stock"));
-                    return sendResponse(res, HTTP_STATUS.CONFLICT, "Checkout failed!Not enough stock")
+                result.totalPrice = total;
+                if (result.totalPrice > findUser.balance) {
+                    return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Checkout unsuccessful!Not enough balance!");
                 }
-                const updatedCart = await transactionModel.findOneAndUpdate(
-                    { "user": req.userId },
-                    { $set: { products: findCart.products, totalPrice: findCart.totalPrice } },
-                    { new: true }
-                );
-                const order = new orderModel({
-                    user: req.userId, products: updatedCart.products, cart: findCart._id, totalPrice: updatedCart.totalPrice
+                const findProduct = await bookModel.find({
+                    _id
+                        : { $in: productIds }
+                });
+                findCart.products.map(async (x) => {
+                    findProduct.map(async (item) => {
+                        if (item._id.toString() == x.p_id.toString()) {
+                            if (item.stock < x.quantity) {
+                                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Checkput unsuccessful.Not enough stock!")
+                            }
+                            item.stock -= x.quantity;
+                            console.log(`stock ${item.stock}`)
+                            await item.save();
+                            await result.save();
+                            findUser.balance -= result.totalPrice;
+                            findUser.order.push(result._id);
+                            await findUser.save();
+                            findCart.products = [];
+                            findCart.totalPrice = 0;
+                            await findCart.save();
+                            return sendResponse(res, HTTP_STATUS.OK, "Successfully check out!", result)
+                        }
+                    })
                 })
-                await order.save();
-                findUser.order.push(order._id);
-                await findUser.save()
-                findCart.products = [];
-                findCart.totalPrice = 0;
-                await findCart.save();
-                findProduct.stock -= x.quantity;
-                await findProduct.save();
-                // return res.status(200).send(success("Successfully checked out", updatedCart));
-                return sendResponse(res, HTTP_STATUS.OK, "Successfully checked out", updatedCart)
-            })
-
+                // await result.save();
+                // findUser.balance -= result.totalPrice;
+                // await findUser.save();
+                // return sendResponse(res, HTTP_STATUS.OK, "Successfully check out!", result)
+            }
+            else {
+                let total = 0;
+                findCart.products.map(async (x) => {
+                    findDiscount.map(async (item) => {
+                        if (item.productId.toString() == x.p_id.toString()) {
+                            if (currentDate >= item.discountStart && currentDate <= item.discountEnd) {
+                                total += item.discountPrice * x.quantity;
+                            }
+                            else {
+                                total += item.price * x.quantity;
+                            }
+                        }
+                    })
+                })
+                findTransaction.totalPrice = total;
+                if (findTransaction.totalPrice > findUser.balance) {
+                    return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Checkout unsuccessful!Not enough balance!");
+                }
+                findTransaction.products = findCart.products;
+                const findProduct = await bookModel.find({
+                    _id
+                        : { $in: productIds }
+                });
+                findCart.products.map(async (x) => {
+                    findProduct.map(async (item) => {
+                        if (item._id.toString() == x.p_id.toString()) {
+                            if (item.stock < x.quantity) {
+                                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Checkput unsuccessful.Not enough stock!")
+                            }
+                            item.stock -= x.quantity;
+                            console.log(`stock ${item.stock}`)
+                            await item.save();
+                            await findTransaction.save();
+                            findUser.balance -= findTransaction.totalPrice;
+                            findUser.order.push(findTransaction._id);
+                            await findUser.save();
+                            findCart.products = [];
+                            findCart.totalPrice = 0;
+                            await findCart.save();
+                            return sendResponse(res, HTTP_STATUS.OK, "Successfully check out!", findTransaction)
+                        }
+                    })
+                })
+                // await findTransaction.save();
+                // findUser.balance -= findTransaction.totalPrice;
+                // await findUser.save();
+                // return sendResponse(res, HTTP_STATUS.OK, "Successfully check out!", findTransaction)
+            }
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");

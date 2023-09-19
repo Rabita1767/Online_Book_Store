@@ -185,16 +185,16 @@ class Auth {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
         }
     }
-    async discountGetAll(req, res) {
-        try {
-            const book=await bookModel.find({});
-            
+    // async discountGetAll(req, res) {
+    //     try {
+    //         const book=await bookModel.find({});
 
-        } catch (error) {
-            console.log(error);
-            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
-        }
-    }
+
+    //     } catch (error) {
+    //         console.log(error);
+    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+    //     }
+    // }
 
 
 }

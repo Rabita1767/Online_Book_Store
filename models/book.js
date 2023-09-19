@@ -17,6 +17,8 @@ const productSchema = new mongoose.Schema({
     },
     discountStart: Date,
     discountEnd: Date,
+    // discountStart: { type: Date, required: true },
+    // discountEnd: { type: Date, required: true },
 }, { timestamps: true }
 );
 
