@@ -170,7 +170,7 @@ class user {
             }
             const findTransaction = await transactionModel.findOne({ user: req.userId });
             if (!findTransaction) {
-                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Requet invalid!");
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Requet invalid!No record found!");
             }
             return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findTransaction);
 

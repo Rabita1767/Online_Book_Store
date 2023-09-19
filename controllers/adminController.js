@@ -218,8 +218,10 @@ class admin {
                 query.discountEnd = discountEnd;
             }
             const updatedResult = await discountModel.updateOne({ productId: id }, { $set: query });
-            updatedResult.discountPrice = updatedResult.price - (updatedResult.price * (updatedResult.discountPercentage / 100));
-            await updatedResult.save();
+            const find = await discountModel.findOne({ productId: id });
+            find.discountPrice = find.price - (find.price * (find.discountPercentage / 100));
+            console.log(`updated ${find.discountPrice}`)
+            await find.save();
             await bookModel.updateOne({ _id: id }, { $set: query })
             return sendResponse(res, HTTP_STATUS.OK, "Discount updatd successfully!", updatedResult);
 
@@ -235,6 +237,9 @@ class admin {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
             }
             const view = await transactionModel.find({}).populate("user");
+            if (view.length == 0) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No record found!");
+            }
             return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", view)
 
         } catch (error) {
