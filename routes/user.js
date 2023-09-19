@@ -9,4 +9,6 @@ routes.patch("/updateReview", auth.auth, auth.isUser, userController.updateRevie
 routes.get("/viewProfile", auth.auth, userController.userProfile);
 routes.post("/addBalance", auth.auth, auth.isUser, userController.addBalance);
 routes.get("/viewTransaction", auth.auth, auth.isUser, userController.viewTrasaction);
+routes.post("/passwordReset", auth.auth, auth.isUser, userController.resetPassword);
+routes.post("/updateProfile", auth.auth, auth.isUser, userController.updateProfile);
 module.exports = routes;

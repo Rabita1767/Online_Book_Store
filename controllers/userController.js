@@ -31,7 +31,7 @@ class user {
                 findProductReview.map((x) => {
                     rate += x.rating;
                 })
-                findProduct.rating = rate;
+                findProduct.rating = (rate / findProductReview.length).toFixed(1);
                 await findProduct.save();
 
                 const update = await bookModel.find({}).populate("review");
@@ -79,6 +79,15 @@ class user {
             product.review.splice(productIndex, 1);
             await product.save();
             const findReview = await reviewModel.findOneAndDelete({ $and: [{ userId: req.userId }, { bookId: bookId }] });
+            const findProductReview = await reviewModel.find({ bookId: bookId })
+            //const findBook = await bookModel.findById({ _id: bookId });
+            let rate = 0;
+            findProductReview.map((x) => {
+                rate += x.rating;
+            })
+            const findProduct = await bookModel.findOne({ _id: bookId });
+            findProduct.rating = (rate / findProductReview.length).toFixed(1);
+            await findProduct.save();
             return sendResponse(res, HTTP_STATUS.OK, "Review has been deleted!");
 
         } catch (error) {
@@ -176,6 +185,67 @@ class user {
 
         } catch (error) {
             console.log(error)
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async resetPassword(req, res) {
+        try {
+            const { old_password, new_password } = req.body;
+            const findUser = await userModel.findById({ _id: req.userId });
+            const findAuthUser = await authModel.findOne({ user: req.userId });
+            console.log(findUser);
+            console.log(findAuthUser);
+            if (!findUser) {
+                // return res.status(400).send(failure("Please Log in first"));
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
+            }
+            const check = await bcrypt.compare(old_password, findAuthUser.password);
+            if (check) {
+                const hashedNewPass = await bcrypt.hash(new_password, 10);
+                findAuthUser.password = hashedNewPass;
+                await findAuthUser.save();
+                await findUser.save();
+                // return res.status(200).send(success("Password has been updated", findAuthUser));
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Password has been updated", findAuthUser);
+            }
+            // return res.status(400).send(success("Please try again later"));
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please try again later");
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async updateProfile(req, res) {
+        try {
+            const { name, email, phone } = req.body;
+            const query = {};
+            const findUser = await userModel.findById({ _id: req.userId });
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
+            }
+            if (name) {
+                query.name = name;
+            }
+            if (email) {
+                query.email = email;
+                const findEmail = await userModel.findOne({ email: email })
+                if (findEmail && findEmail._id != req.userId) {
+                    console.log(`email id ${findEmail._id}`)
+                    return sendResponse(res, HTTP_STATUS.SERVICE_UNAVAILABLE, "Email already registered")
+                }
+            }
+            if (phone) {
+                query.phone = phone;
+                const findPhone = await userModel.findOne({ phone: phone })
+                if (findPhone && findPhone._id != req.userId) {
+                    return sendResponse(res, HTTP_STATUS.SERVICE_UNAVAILABLE, "Phone number already registered")
+                }
+            }
+            const updatedProfile = await userModel.updateOne({ _id: req.userId }, { $set: query })
+            return sendResponse(res, HTTP_STATUS.OK, "Profile updated Successfully", updatedProfile);
+
+        } catch (error) {
+            console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
