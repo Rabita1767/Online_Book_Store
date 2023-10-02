@@ -4,13 +4,21 @@ const reviewModel = require("../models/review");
 const orderModel = require("../models/order");
 const balanceModel = require("../models/balance");
 const transactionModel = require("../models/transaction");
+const { validationResult } = require("express-validator");
 const { sendResponse } = require("../util/common");
+const bcrypt = require("bcrypt");
+const log = require("../util/logFile");
 const HTTP_STATUS = require("../constants/statusCode");
 class user {
     async review(req, res) {
         try {
+            log.createLogFile("/user/addReview", "Success")
             const { comment, bookId, rating } = req.body;
             const findUser = await userModel.findById({ _id: req.userId });
+            const validation = validationResult(req).array();
+            if (validation.length > 0) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the review", validation);
+            }
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up");
             }
@@ -34,7 +42,7 @@ class user {
                 findProduct.rating = (rate / findProductReview.length).toFixed(1);
                 await findProduct.save();
 
-                const update = await bookModel.find({}).populate("review");
+                const update = await bookModel.findById({ _id: bookId }).populate("review");
                 return sendResponse(res, HTTP_STATUS.OK, "Updated Successfully", update);
             }
             const result = new reviewModel({
@@ -50,13 +58,14 @@ class user {
             findProductReview.map((x) => {
                 rate += x.rating;
             })
-            findProduct.rating = rate;
+            findProduct.rating = (rate / findProductReview.length).toFixed(1);
             await findProduct.save();
-            const getProducts = await bookModel.find({})
+            const getProducts = await bookModel.findById({ _id: bookId })
                 .populate("review");
             return sendResponse(res, HTTP_STATUS.OK, "Review added successfully", getProducts);
             //return res.status(200).send(success("Successfully stored review", getProducts));
         } catch (error) {
+            log.createLogFile("/user/addReview", "Failure")
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error");
 
@@ -64,13 +73,21 @@ class user {
     }
     async deleteReview(req, res) {
         try {
-            const { bookId } = req.body;
+            log.createLogFile("/user/deleteReview", "Success")
+            const { bookId } = req.query;
             const findUser = await userModel.findById({ _id: req.userId });
+            const validation = validationResult(req).array();
+            if (validation.length > 0) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to delete the review", validation);
+            }
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "User not found");
             }
-            const getReview = await reviewModel.findOne({ bookId: bookId });
+            const getReview = await reviewModel.findOne({ $and: [{ bookId: bookId }, { userId: req.userId }] });
             console.log(getReview)
+            if (!getReview) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No review has been given by you!");
+            }
             const index = findUser.review.findIndex((x) => x == getReview._id);
             findUser.review.splice(index, 1);
             await findUser.save();
@@ -79,26 +96,36 @@ class user {
             product.review.splice(productIndex, 1);
             await product.save();
             const findReview = await reviewModel.findOneAndDelete({ $and: [{ userId: req.userId }, { bookId: bookId }] });
-            const findProductReview = await reviewModel.find({ bookId: bookId })
-            //const findBook = await bookModel.findById({ _id: bookId });
+            const findExist = await reviewModel.find({ bookId: bookId });
+            const book = await bookModel.findById({ _id: bookId })
+            if (findExist.length == 0) {
+                book.rating = 0;
+                await book.save();
+                return sendResponse(res, HTTP_STATUS.OK, "Review has been deleted!");
+            }
             let rate = 0;
-            findProductReview.map((x) => {
+            findExist.map((x) => {
                 rate += x.rating;
             })
-            const findProduct = await bookModel.findOne({ _id: bookId });
-            findProduct.rating = (rate / findProductReview.length).toFixed(1);
-            await findProduct.save();
+            book.rating = (rate / findExist.length).toFixed(1);
+            await book.save();
             return sendResponse(res, HTTP_STATUS.OK, "Review has been deleted!");
 
         } catch (error) {
+            log.createLogFile("/user/deleteReview", "Failure")
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
     async updateReview(req, res) {
         try {
+            log.createLogFile("/user/updateReview", "Success")
             const { bookId, rating, comment } = req.body;
             const findUser = await userModel.findById({ _id: req.userId });
+            const validation = validationResult(req).array();
+            if (validation.length > 0) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the review", validation);
+            }
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "User not found!");
             }
@@ -113,19 +140,33 @@ class user {
             if (comment) {
                 updateFields.comment = comment;
             }
-            const findReview = await reviewModel.findOneAndUpdate(
-                { "bookId": bookId },
-                { $set: updateFields },
-                { new: true }
-            );
+            // const findReview = await reviewModel.findOneAndUpdate(
+            //     { "bookId": bookId },
+            //     { $set: updateFields },
+            //     { new: true }
+            // );
+            const findReview = await reviewModel.updateOne({ $and: [{ bookId: bookId }, { userId: req.userId }] }, { $set: updateFields })
+            if (findReview.modifiedCount === 0) {
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "No review was given by you!Give a review first");
+            }
+            const findExist = await reviewModel.find({ bookId: bookId });
+            const book = await bookModel.findById({ _id: bookId })
+            let rate = 0;
+            findExist.map((x) => {
+                rate += x.rating;
+            })
+            book.rating = (rate / findExist.length).toFixed(1);
+            await book.save();
             return sendResponse(res, HTTP_STATUS.OK, "Data has been updated", findReview);
         } catch (error) {
+            log.createLogFile("/user/updateReview", "Failure")
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
     async userProfile(req, res) {
         try {
+            log.createLogFile("/user/viewProfile", "Success")
             const findUser = await userModel.findById({ _id: req.userId })
                 .populate("order")
                 .populate("review");
@@ -135,19 +176,25 @@ class user {
 
             return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findUser);
         } catch (error) {
+            log.createLogFile("/user/viewProfile", "Failure")
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
     async addBalance(req, res) {
         try {
+            log.createLogFile("/user/addBalance", "Success")
             const { balance, currency } = req.body;
             const findUser = await userModel.findById({ _id: req.userId });
             const findAuth = await authModel.findOne({ user: req.userId });
+            const validation = validationResult(req).array();
+            if (validation.length > 0) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the review", validation);
+            }
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
             }
-            if (balance <= 10 || balance >= 1000) {
+            if (balance <= 10 || balance > 5000) {
                 const result = new balanceModel({
                     userId: req.userId, amount: balance, currency: currency
                 })
@@ -166,6 +213,7 @@ class user {
             await findAuth.save();
             return sendResponse(res, HTTP_STATUS.OK, "Successfully added balance to your wallet!", findUser);
         } catch (error) {
+            log.createLogFile("/user/addBalance", "Failure")
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
@@ -173,6 +221,7 @@ class user {
     }
     async viewTrasaction(req, res) {
         try {
+            log.createLogFile("/user/viewTransaction", "Success")
             const findUser = await userModel.findById({ _id: req.userId });
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up!");
@@ -184,13 +233,19 @@ class user {
             return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findTransaction);
 
         } catch (error) {
+            log.createLogFile("/user/viewTransaction", "Failure")
             console.log(error)
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
     async resetPassword(req, res) {
         try {
+            log.createLogFile("/user/passwordReset", "Success")
             const { old_password, new_password } = req.body;
+            const validation = validationResult(req).array();
+            if (validation.length > 0) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the review", validation);
+            }
             const findUser = await userModel.findById({ _id: req.userId });
             const findAuthUser = await authModel.findOne({ user: req.userId });
             console.log(findUser);
@@ -211,14 +266,20 @@ class user {
             // return res.status(400).send(success("Please try again later"));
             return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please try again later");
         } catch (error) {
+            log.createLogFile("/user/passwordReset", "Failure")
             console.log(error);
             return sendResponse(res, HTTP.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
     async updateProfile(req, res) {
         try {
+            log.createLogFile("/user/updateProfile", "Success")
             const { name, email, phone } = req.body;
             const query = {};
+            const validation = validationResult(req).array();
+            if (validation.length > 0) {
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the book", validation);
+            }
             const findUser = await userModel.findById({ _id: req.userId });
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
@@ -242,9 +303,11 @@ class user {
                 }
             }
             const updatedProfile = await userModel.updateOne({ _id: req.userId }, { $set: query })
+            await authModel.updateOne({ user: req.userId }, { $set: query })
             return sendResponse(res, HTTP_STATUS.OK, "Profile updated Successfully", updatedProfile);
 
         } catch (error) {
+            log.createLogFile("/user/updateProfile", "Failure")
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }

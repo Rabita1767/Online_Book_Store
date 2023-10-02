@@ -133,35 +133,43 @@ class authentication {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
-    cartAuth(req, res, next) {
+    // cartAuth(req, res, next) {
+    //     try {
+    //         let token = req.headers.authorization;
+    //         if (token) {
+    //             token = token.split(" ")[1];
+    //             let user = jwt.verify(token, SECRET_KEY);
+    //             req.userId = user.id;
+    //             console.log(`hello ${req.userId}`);
+    //             if (user) {
+    //                 next()
+    //             }
+    //             else {
+    //                 throw new Error();
+    //             }
+    //         }
+    //         else {
+    //             next();
+    //         }
+    //     } catch (error) {
+    //         next();
+    //         // console.log(error);
+    //         // if (error instanceof jwt.JsonWebTokenError) {
+    //         //     //return res.status(500).send(failure("Token Invalid"))
+    //         //     return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Token Invalid");
+    //         // }
+    //         // if (error instanceof jwt.TokenExpiredError) {
+    //         //     return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Please Log in again!");
+    //         // }
+    //         // return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+    //     }
+    // }
+    validateJSON(req, res, next) {
         try {
-            let token = req.headers.authorization;
-            if (token) {
-                token = token.split(" ")[1];
-                let user = jwt.verify(token, SECRET_KEY);
-                req.userId = user.id;
-                console.log(`hello ${req.userId}`);
-                if (user) {
-                    next()
-                }
-                else {
-                    throw new Error();
-                }
-            }
-            else {
-                next();
-            }
+            JSON.parse(JSON.stringify(req.body));
+            next(); // JSON is valid, proceed to the next middleware
         } catch (error) {
-            next();
-            // console.log(error);
-            // if (error instanceof jwt.JsonWebTokenError) {
-            //     //return res.status(500).send(failure("Token Invalid"))
-            //     return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Token Invalid");
-            // }
-            // if (error instanceof jwt.TokenExpiredError) {
-            //     return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Please Log in again!");
-            // }
-            // return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
 }

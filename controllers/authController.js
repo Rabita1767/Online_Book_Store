@@ -11,6 +11,7 @@ const jwt = require("jsonwebtoken");
 const HTTP_STATUS = require("../constants/statusCode");
 const { validationResult } = require("express-validator");
 const { sendResponse } = require("../util/common");
+const log = require("../util/logFile");
 //const validate = require("../middleware/validate")
 const SECRET_KEY = "myapi";
 class Auth {
@@ -23,10 +24,14 @@ class Auth {
             else {
                 const { name, email, password, confirmPassword, phone, role, superAdmin } = req.body;
                 const exist = await userModel.findOne({ email: email });
+                const phoneExist = await userModel.findOne({ phone: phone });
                 console.log(`user ${exist}`);
                 if (exist) {
                     //return res.status(400).send(failure("User already exist!"));
-                    return sendResponse(res, HTTP_STATUS.CONFLICT, "User already exist!");
+                    return sendResponse(res, HTTP_STATUS.CONFLICT, "Email is registered!");
+                }
+                if (phoneExist) {
+                    return sendResponse(res, HTTP_STATUS.CONFLICT, "Phone number is registered");
                 }
                 if (password != confirmPassword) {
                     return sendResponse(res, HTTP_STATUS.CONFLICT, "Passwords dont match!");
@@ -52,7 +57,6 @@ class Auth {
         try {
             const { email, password } = req.body;
             const Userexist = await authModel.findOne({ email: email })
-                .populate("user");
             console.log(Userexist)
             if (!Userexist) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please Sign up first!");
@@ -65,7 +69,9 @@ class Auth {
             const token = jwt.sign({ email: Userexist.email, id: Userexist.user._id, role: Userexist.role, superAdmin: Userexist.superAdmin }, SECRET_KEY, { expiresIn: "1h" });
             console.log(Userexist.user._id);
             console.log(Userexist.role);
-            return sendResponse(res, HTTP_STATUS.OK, "Successfully logged in", { result: Userexist, token: token });
+            const result = await userModel.findById({ _id: Userexist.user })
+                .select("name email balance");
+            return sendResponse(res, HTTP_STATUS.OK, "Successfully logged in", { result: result, token: token });
         } catch (error) {
             console.log(error)
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
@@ -154,11 +160,14 @@ class Auth {
             if (filterResult.length == 0) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Book Found!");
             }
-            return sendResponse(res, HTTP_STATUS.OK, { success: true, message: "Data fetched", data: { total: book.length, countPerPage: limit, page: page, limit: limit, result: filterResult } });
+            return sendResponse(res, HTTP_STATUS.OK, "Data Fetched Successfully", filterResult);
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
         }
+    }
+    async url(req, res) {
+        return sendResponse(res, HTTP_STATUS.NOT_FOUND, "URL not found!");
     }
     // async discountGetAll(req, res) {
     //     try {

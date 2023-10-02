@@ -122,8 +122,8 @@ const validator = {
             .exists()
             .withMessage("Email must be provided")
             .bail()
-            .isString()
-            .withMessage("Email must be a string")
+            .isEmail()
+            .withMessage("Invalid Email Address")
             .bail()
             .isEmail()
             .withMessage("Email must be in valid format"),
