@@ -71,7 +71,7 @@ class Auth {
             console.log(Userexist.role);
             const result = await userModel.findById({ _id: Userexist.user })
                 .select("name email balance");
-            return sendResponse(res, HTTP_STATUS.OK, "Successfully logged in", { result: result, token: token });
+            return sendResponse(res, HTTP_STATUS.OK, "Successfully logged in", { result: result, token: token, role: Userexist.role });
         } catch (error) {
             console.log(error)
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
@@ -80,16 +80,19 @@ class Auth {
 
     async getAll(req, res) {
         try {
-            const { isbn, name, minPrice, maxPrice, category, stock, author, publisher, discount_price, rating, search, sortParam, sortPrice } = req.query;
+            const { id, isbn, name, minPrice, maxPrice, category, stock, author, publisher, discount_price, rating, search, sortParam, sortPrice } = req.query;
             const page = req.query.page || 1;
-            const limit = req.query.limit || 5;
+            const limit = req.query.limit || 10;
             const currentDate = new Date();
-            const accept = ["isbn", "name", "minPrice", "maxPrice", "category", "stock", "publisher", "rating", "search", "sortParam", "sortPrice"];
+            const accept = ["id", "isbn", "name", "minPrice", "maxPrice", "category", "stock", "publisher", "rating", "search", "sortParam", "sortPrice"];
             const wrongParam = Object.keys(req.query).filter((x) => !accept.includes(x));
             if (wrongParam.length > 0) {
                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Request Invalid!");
             }
             const query = {};
+            if (id) {
+                query._id = id;
+            }
             if (isbn) {
                 query.isbn = isbn;
             }

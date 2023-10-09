@@ -21,8 +21,8 @@ class admin {
             if (validation.length > 0) {
                 return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the book", validation);
             }
-            const { isbn, name, price, category, stock, author, publisher, discountPercentage, discountStart, discountEnd } = req.body;
-            const products = new bookModel({ isbn: isbn, name: name, price: price, category: category, stock: stock, author: author, publisher: publisher, discountPercentage: discountPercentage, discountStart: discountStart, discountEnd: discountEnd });
+            const { image, isbn, name, price, category, stock, author, publisher, discountPercentage, discountStart, discountEnd } = req.body;
+            const products = new bookModel({ image: image, isbn: isbn, name: name, price: price, category: category, stock: stock, author: author, publisher: publisher, discountPercentage: discountPercentage, discountStart: discountStart, discountEnd: discountEnd });
             const existBook = await bookModel.findOne({ isbn: isbn })
             if (existBook) {
                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Book isbn already exist");
@@ -126,8 +126,8 @@ class admin {
 
         try {
             log.createLogFile("/book/updateBook", "Success")
-            const { _id } = req.query;
-            console.log(_id);
+            const { id } = req.query;
+            console.log(id);
             const updateFields = {};
             const { isbn, name, price, category, stock, author, publisher, discountPercentage, discountStart, discountEnd } = req.body;
             const validation = validationResult(req).array();
@@ -169,7 +169,7 @@ class admin {
                 updateFields.discountEnd = discountEnd
             }
             console.log(updateFields)
-            const updateResult = await bookModel.updateOne({ _id: _id }, { $set: updateFields });
+            const updateResult = await bookModel.updateOne({ _id: id }, { $set: updateFields });
             console.log(updateResult);
             if (updateResult.modifiedCount === 0) {
                 return sendResponse(res, HTTP_STATUS.EXPECTATION_FAILED, "No document was updated");
@@ -359,6 +359,55 @@ class admin {
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async getAllUser(req, res) {
+        try {
+            const { id, name, email, phone, balance } = req.query;
+            const page = req.query.page || 1;
+            const limit = req.query.limit || 10;
+            const currentDate = new Date();
+            const accept = ["id", "name", "email", "phone", "balance"];
+            const wrongParam = Object.keys(req.query).filter((x) => !accept.includes(x));
+            if (wrongParam.length > 0) {
+                return sendResponse(res, HTTP_STATUS.CONFLICT, "Request Invalid!");
+            }
+            const query = {};
+            if (id) {
+                query._id = id;
+            }
+            if (name) {
+                if (Array.isArray(name)) {
+                    query.name = { $in: name.map(value => new RegExp(value, "i")) }
+                }
+                else {
+                    query.name = { $regex: name, $options: "i" };
+                }
+            }
+            if (email) {
+                query.email = email;
+            }
+            if (phone) {
+                query.phone = phone;
+            }
+            if (balance) {
+                query.balance = balance;
+            }
+
+            const skipContent = (parseInt(page) - 1) * parseInt(limit);
+            const user = await userModel.find(query);
+            const filterResult = await userModel.find(query)
+                .skip(skipContent)
+                .limit(limit);
+            if (filterResult.length == 0) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Book Found!");
+            }
+            return sendResponse(res, HTTP_STATUS.OK, "Data Fetched Successfully", filterResult);
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+
         }
     }
 
