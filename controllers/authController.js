@@ -84,7 +84,7 @@ class Auth {
             const page = req.query.page || 1;
             const limit = req.query.limit || 10;
             const currentDate = new Date();
-            const accept = ["id", "isbn", "name", "minPrice", "maxPrice", "category", "stock", "publisher", "rating", "search", "sortParam", "sortPrice"];
+            const accept = ["id", "isbn", "name", "minPrice", "maxPrice", "category", "stock", "publisher", "rating", "search", "sortParam", "sortPrice", "page", "limit"];
             const wrongParam = Object.keys(req.query).filter((x) => !accept.includes(x));
             if (wrongParam.length > 0) {
                 return sendResponse(res, HTTP_STATUS.CONFLICT, "Request Invalid!");
