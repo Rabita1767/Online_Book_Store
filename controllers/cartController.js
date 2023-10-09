@@ -256,22 +256,24 @@ class cart {
                             if (currentDate > item.discountEnd || currentDate < item.discountStart) {
                                 total += item.price * x.quantity;
                                 console.log(`total ${total}`)
-                                findCart.totalPrice = total;
-                                console.log(`find ${findCart.totalPrice}`)
-                                findCart.save();
-                                return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
+                                // findCart.totalPrice = total;
+                                // console.log(`find ${findCart.totalPrice}`)
+                                // findCart.save();
+                                // return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
                             }
                             let updatedPrice = item.price;//12.99
                             updatedPrice -= updatedPrice * (item.discountPercentage / 100);//12.99-(12.99X0.02)
                             total += updatedPrice * x.quantity;
-                            findCart.totalPrice = total;
-                            findCart.save();
-                            return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
+                            // findCart.totalPrice = total;
+                            // findCart.save();
+                            // return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
 
                         }
                     })
                 })
-
+                findCart.totalPrice = total;
+                await findCart.save();
+                return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
             }
 
         } catch (error) {

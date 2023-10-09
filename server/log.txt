@@ -194,3 +194,7 @@
 2023-10-08T19:44:06.948Z - Route: /cart/addToCart - Success
 2023-10-08T19:46:44.083Z - Route: /cart/addToCart - Success
 2023-10-08T19:46:46.844Z - Route: /cart/addToCart - Success
+2023-10-09T16:18:13.390Z - Route: /cart/addToCart - Success
+2023-10-09T16:18:14.548Z - Route: /cart/addToCart - Failure
+2023-10-09T16:19:48.175Z - Route: /cart/addToCart - Success
+2023-10-09T16:20:32.998Z - Route: /cart/viewCart - Success

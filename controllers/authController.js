@@ -172,17 +172,6 @@ class Auth {
     async url(req, res) {
         return sendResponse(res, HTTP_STATUS.NOT_FOUND, "URL not found!");
     }
-    // async discountGetAll(req, res) {
-    //     try {
-    //         const book=await bookModel.find({});
-
-
-    //     } catch (error) {
-    //         console.log(error);
-    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
-    //     }
-    // }
-
 
 }
 module.exports = new Auth()
