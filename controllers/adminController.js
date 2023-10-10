@@ -385,7 +385,7 @@ class admin {
                 }
             }
             if (email) {
-                query.email = email;
+                query.email = email
             }
             if (phone) {
                 query.phone = phone;
@@ -400,17 +400,29 @@ class admin {
                 .skip(skipContent)
                 .limit(limit);
             if (filterResult.length == 0) {
-                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Book Found!");
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No User Found!");
             }
             return sendResponse(res, HTTP_STATUS.OK, "Data Fetched Successfully", filterResult);
 
         } catch (error) {
             console.log(error);
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
-
         }
     }
+    async getUserById(req, res) {
+        try {
+            const { id } = req.query;
+            const findUser = await userModel.findById({ _id: id })
+            if (!findUser) {
+                return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please Sign in!")
+            }
+            return sendResponse(res, HTTP_STATUS.OK, "Data found successfully", findUser);
 
+        } catch (error) {
+            console.log(error)
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
 
 
 

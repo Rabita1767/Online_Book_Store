@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
 
 const balanceSchema = new mongoose.Schema({
-    // Using the default _id field as the unique identifier
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Reference to the User model (if you have one)
+        ref: 'User',
         required: true,
     },
     timestamp: {
@@ -22,7 +21,7 @@ const balanceSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['completed', 'pending', 'failed'],
-        default: 'pending', // Set a default status
+        default: 'pending',
     },
 
 });

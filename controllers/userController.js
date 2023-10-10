@@ -189,7 +189,7 @@ class user {
             const findAuth = await authModel.findOne({ user: req.userId });
             const validation = validationResult(req).array();
             if (validation.length > 0) {
-                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the review", validation);
+                return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Failed to add the balance", validation);
             }
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign in!");
@@ -207,8 +207,8 @@ class user {
             })
             result.status = "completed";
             await result.save();
-            findUser.balance += balance;
-            findAuth.balance += balance;
+            findUser.balance += parseInt(balance);
+            findAuth.balance += parseInt(balance);
             await findUser.save();
             await findAuth.save();
             return sendResponse(res, HTTP_STATUS.OK, "Successfully added balance to your wallet!", findUser);

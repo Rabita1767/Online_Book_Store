@@ -66,7 +66,7 @@ class Auth {
             if (!pass) {
                 return sendResponse(res, HTTP_STATUS.UNAUTHORIZED, "Wrong Credentials");
             }
-            const token = jwt.sign({ email: Userexist.email, id: Userexist.user._id, role: Userexist.role, superAdmin: Userexist.superAdmin }, SECRET_KEY, { expiresIn: "1h" });
+            const token = jwt.sign({ email: Userexist.email, id: Userexist.user._id, role: Userexist.role, superAdmin: Userexist.superAdmin }, SECRET_KEY);
             console.log(Userexist.user._id);
             console.log(Userexist.role);
             const result = await userModel.findById({ _id: Userexist.user })
@@ -172,6 +172,17 @@ class Auth {
     async url(req, res) {
         return sendResponse(res, HTTP_STATUS.NOT_FOUND, "URL not found!");
     }
+    // async discountGetAll(req, res) {
+    //     try {
+    //         const book=await bookModel.find({});
+
+
+    //     } catch (error) {
+    //         console.log(error);
+    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+    //     }
+    // }
+
 
 }
 module.exports = new Auth()

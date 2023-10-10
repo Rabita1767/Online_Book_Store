@@ -14,9 +14,10 @@ routes.delete("/deleteUser", auth.isRole, auth.isSuper, adminController.deleteUs
 // routes.post("/updateBook", auth.isRole, validation.updateBook, adminController.updateBook);
 routes.patch("/updateBook", adminController.updateBook);
 routes.post("/updateUser", auth.auth, validation.updateUser, adminController.updateUser);
-routes.post("/addDiscount", auth.auth, validation.addDiscount, adminController.addDiscount);
+routes.post("/addDiscount", validation.addDiscount, adminController.addDiscount);
 routes.patch("/updateDiscount", auth.auth, validation.updateDiscount, adminController.updateDiscount);
 routes.get("/viewAllTransaction", auth.auth, auth.isRole, auth.isSuper, adminController.viewAllTransaction);
 routes.post("/updateProfile", auth.auth, validation.updateProfile, adminController.updateProfile);
 routes.get("/getAllUser", adminController.getAllUser)
+routes.get("/getUserById",adminController.getUserById)
 module.exports = routes;

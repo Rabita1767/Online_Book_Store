@@ -26,6 +26,7 @@ class cart {
             }
             const findProduct = await bookModel.findById({ _id: p_id });
             const findUser = await userModel.findById({ _id: req.userId })
+            console.log(req.userId)
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up!");
             }
@@ -53,53 +54,62 @@ class cart {
                 console.log(`total: ${total}`)
                 createCart.totalPrice = total;
                 console.log(`cart total: ${createCart.totalPrice}`)
-                createCart.save();
+                await createCart.save();
                 return sendResponse(res, HTTP_STATUS.OK, "New cart has been created", createCart);
             }
-            const exist = await cartModel.findOne({ "products.p_id": p_id });
-            //const productFound = exist.products.filter((x) => x.p_id == p_id);
-            if (exist) {
+            else {
+                // const exist = await cartModel.findOne({ "products.p_id": p_id });
+                const exist = await cartModel.findOne({
+                    $and: [
+                        { "products.p_id": p_id },
+                        { user: req.userId } // Assuming req.userId holds the user information
+                    ]
+                });
+                //const productFound = exist.products.filter((x) => x.p_id == p_id);
+                if (exist) {
 
-                const updatedCart = await cartModel.findOneAndUpdate(
-                    { "products.p_id": p_id },
-                    { $inc: { "products.$.quantity": quantity } },
-                    { new: true }
-                );
-                const result = updatedCart.products.find((x) => x.p_id == p_id)
-                if (result.quantity <= findProduct.stock) {
-                    if (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd) {
-                        findProduct.price -= (findProduct.price * (findProduct.discountPercentage / 100));
+                    const updatedCart = await cartModel.findOneAndUpdate(
+                        { "products.p_id": p_id },
+                        { $inc: { "products.$.quantity": quantity } },
+                        { new: true }
+                    );
+                    const result = updatedCart.products.find((x) => x.p_id == p_id)
+                    if (result.quantity <= findProduct.stock) {
+                        if (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd) {
+                            findProduct.price -= (findProduct.price * (findProduct.discountPercentage / 100));
+                            updatedCart.totalPrice += quantity * findProduct.price;
+                            await updatedCart.save();
+                            return sendResponse(res, HTTP_STATUS.OK, "Cart has been updated", updatedCart);
+
+                        }
                         updatedCart.totalPrice += quantity * findProduct.price;
                         await updatedCart.save();
+                        //return res.status(200).send(success("updated", updatedCart))
                         return sendResponse(res, HTTP_STATUS.OK, "Cart has been updated", updatedCart);
-
                     }
-                    updatedCart.totalPrice += quantity * findProduct.price;
-                    await updatedCart.save();
-                    //return res.status(200).send(success("updated", updatedCart))
-                    return sendResponse(res, HTTP_STATUS.OK, "Cart has been updated", updatedCart);
-                }
-                const decrease = await cartModel.findOneAndUpdate(
-                    { "products.p_id": p_id },
-                    { $inc: { "products.$.quantity": -quantity } },
-                    { new: true }
-                );
-                return sendResponse(res, HTTP_STATUS.CONFLICT, "Can't add item not enough stock!", decrease);
+                    const decrease = await cartModel.findOneAndUpdate(
+                        { "products.p_id": p_id },
+                        { $inc: { "products.$.quantity": -quantity } },
+                        { new: true }
+                    );
+                    return sendResponse(res, HTTP_STATUS.CONFLICT, "Can't add item not enough stock!", decrease);
 
-            }
-            if (quantity <= findProduct.stock) {
-                findCart.products.push({ p_id, quantity });
-                if (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd) {
-                    findProduct.price -= findProduct.price * (findProduct.discountPercentage / 100);
+                }
+                if (quantity <= findProduct.stock) {
+                    findCart.products.push({ p_id, quantity });
+                    if (currentDate >= findProduct.discountStart && currentDate <= findProduct.discountEnd) {
+                        findProduct.price -= findProduct.price * (findProduct.discountPercentage / 100);
+                        findCart.totalPrice += quantity * findProduct.price;
+                        findCart.save();
+                        return sendResponse(res, HTTP_STATUS.OK, "Added item to the cart!", findCart);
+                    }
                     findCart.totalPrice += quantity * findProduct.price;
                     findCart.save();
+
                     return sendResponse(res, HTTP_STATUS.OK, "Added item to the cart!", findCart);
                 }
-                findCart.totalPrice += quantity * findProduct.price;
-                findCart.save();
-
-                return sendResponse(res, HTTP_STATUS.OK, "Added item to the cart!", findCart);
             }
+
 
             return sendResponse(res, HTTP_STATUS.CONFLICT, "Cant add item!Not enough stock!");
         } catch (error) {
@@ -232,6 +242,7 @@ class cart {
 
     async viewCart(req, res) {
         try {
+            let flag = false;
             log.createLogFile("/cart/viewCart", "Success")
             const currentDate = new Date();
             const findUser = await userModel.findById({ _id: req.userId });
@@ -256,24 +267,26 @@ class cart {
                             if (currentDate > item.discountEnd || currentDate < item.discountStart) {
                                 total += item.price * x.quantity;
                                 console.log(`total ${total}`)
-                                // findCart.totalPrice = total;
-                                // console.log(`find ${findCart.totalPrice}`)
+                                findCart.totalPrice = total;
+                                console.log(`find ${findCart.totalPrice}`)
                                 // findCart.save();
+                                flag = true;
                                 // return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
                             }
                             let updatedPrice = item.price;//12.99
                             updatedPrice -= updatedPrice * (item.discountPercentage / 100);//12.99-(12.99X0.02)
                             total += updatedPrice * x.quantity;
-                            // findCart.totalPrice = total;
+                            findCart.totalPrice = total;
                             // findCart.save();
+                            flag = true;
                             // return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
-
                         }
                     })
                 })
-                findCart.totalPrice = total;
-                await findCart.save();
-                return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
+                if (flag) {
+                    await findCart.save();
+                    return sendResponse(res, HTTP_STATUS.OK, "Successfully fetched data", findCart);
+                }
             }
 
         } catch (error) {
@@ -536,8 +549,10 @@ class cart {
     // }
     async checkout(req, res) {
         try {
+            const flag = false;
             const currentDate = new Date();
             const findUser = await userModel.findById({ _id: req.userId });
+            const findAAuthUser = await authModel.findOne({ user: req.userId });
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Sign in");
             }
@@ -581,6 +596,7 @@ class cart {
                     })
                     await createTransaction.save();
                     findUser.balance -= createTransaction.totalPrice;
+                    findAAuthUser.balance = findUser.balance;
                     // await findUser.save();
                     findCart.products.map(async (x) => {
                         findProduct.map(async (y) => {
@@ -599,6 +615,7 @@ class cart {
                     await order.save();
                     findUser.order.push(order._id);
                     await findUser.save();
+                    await findAAuthUser.save();
                     return sendResponse(res, HTTP_STATUS.OK, "Checkout Successful", createTransaction);
                 }
                 const updatedCart = await transactionModel.findOneAndUpdate(
@@ -607,6 +624,7 @@ class cart {
                     { new: true }
                 );
                 findUser.balance -= updatedCart.totalPrice;
+                findAAuthUser.balance = findUser.balance;
                 // await findUser.save();
                 findCart.products.map(async (x) => {
                     findProduct.map(async (y) => {
@@ -625,6 +643,7 @@ class cart {
                 await order.save();
                 findUser.order.push(order._id);
                 await findUser.save()
+                await findAAuthUser.save();
                 return sendResponse(res, HTTP_STATUS.OK, "Checkout Successful", updatedCart);
             }
             return sendResponse(res, HTTP_STATUS.CONFLICT, "Not enough balance!")
