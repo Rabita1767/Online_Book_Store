@@ -1160,3 +1160,11 @@
 2023-10-11T14:38:48.316Z - Route: /user/addReview - Success
 2023-10-11T14:39:44.846Z - Route: /user/addReview - Success
 2023-10-11T14:40:26.749Z - Route: /user/updateReview - Success
+2023-10-11T15:18:49.190Z - Route: /user/viewTransaction - Success
+2023-10-11T15:20:58.861Z - Route: /user/viewTransaction - Success
+2023-10-11T15:20:59.174Z - Route: /user/viewTransaction - Failure
+2023-10-11T15:21:17.281Z - Route: /user/viewTransaction - Success
+2023-10-11T15:21:17.576Z - Route: /user/viewTransaction - Failure
+2023-10-11T15:21:54.802Z - Route: /user/viewTransaction - Success
+2023-10-11T15:21:55.106Z - Route: /user/viewTransaction - Failure
+2023-10-11T15:23:02.802Z - Route: /user/viewTransaction - Success

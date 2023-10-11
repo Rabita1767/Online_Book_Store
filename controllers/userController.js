@@ -226,7 +226,9 @@ class user {
             if (!findUser) {
                 return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Please sign up!");
             }
-            const findTransaction = await transactionModel.findOne({ user: req.userId });
+            const findTransaction = await transactionModel.findOne({ user: req.userId })
+                .populate("products.p_id");
+
             if (!findTransaction) {
                 return sendResponse(res, HTTP_STATUS.UNPROCESSABLE_ENTITY, "Requet invalid!No record found!");
             }
