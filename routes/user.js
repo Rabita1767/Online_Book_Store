@@ -12,4 +12,6 @@ routes.post("/addBalance", auth.auth, auth.isUser, validation.addBalance, userCo
 routes.get("/viewTransaction", auth.auth, auth.isUser, userController.viewTrasaction);
 routes.post("/passwordReset", auth.auth, auth.isUser, validation.resetPassword, userController.resetPassword);
 routes.post("/updateProfile", auth.auth, auth.isUser, validation.updateProfile, userController.updateProfile);
+routes.get("/getProductReview", userController.getProductReview);
+routes.get("/getUserReview", auth.auth, auth.isUser, userController.getUserReview)
 module.exports = routes;

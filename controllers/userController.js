@@ -312,6 +312,34 @@ class user {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async getProductReview(req, res) {
+        try {
+            const { bookId } = req.query;
+            const findReview = await reviewModel.find({ bookId: bookId })
+            if (findReview.length > 0) {
+                return sendResponse(res, HTTP_STATUS.OK, "Review Found!", findReview);
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Reviews Yet!");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+    async getUserReview(req, res) {
+        try {
+            const { bookId } = req.query;
+            const findReview = await reviewModel.findOne({ userId: req.userId, bookId: bookId })
+            if (findReview) {
+                return sendResponse(res, HTTP_STATUS.OK, "Review Found!", findReview);
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Reviews Yet!");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
 
 }
 module.exports = new user();
