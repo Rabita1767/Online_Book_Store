@@ -423,6 +423,20 @@ class admin {
             return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
         }
     }
+    async getBookById(req, res) {
+        try {
+            const { id } = req.query;
+            const findBook = await bookModel.findById({ _id: id });
+            if (findBook) {
+                return sendResponse(res, HTTP_STATUS.OK, "Book Found!", findBook)
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "NO book found!");
+
+        } catch (error) {
+            console.log(error)
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
 
 
 

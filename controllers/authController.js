@@ -6,6 +6,7 @@ const userModel = require("../models/users");
 // const mangaModel = require("../models/products")
 const authModel = require("../models/auth")
 const bookModel = require("../models/book")
+const discountModel = require("../models/discount");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const HTTP_STATUS = require("../constants/statusCode");
@@ -172,6 +173,82 @@ class Auth {
     async url(req, res) {
         return sendResponse(res, HTTP_STATUS.NOT_FOUND, "URL not found!");
     }
+    async getAllBook(req, res) {
+        try {
+            const findBook = await bookModel.find({})
+            if (findBook.length > 0) {
+                return sendResponse(res, HTTP_STATUS.OK, "Data Fetched Successfully!", findBook);
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Records Found!");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
+
+        }
+    }
+    async getDiscount(req, res) {
+        try {
+            const findDiscount = await discountModel.find({})
+            if (findDiscount.length > 0) {
+                return sendResponse(res, HTTP_STATUS.OK, "Data Fetched Successfully!", findDiscount);
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "No Records Found!");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
+
+        }
+    }
+    // async discount(req, res) {
+    //     try {
+    //         const currentDate = new Date();
+    //         const book = await bookModel.find({});
+    //         const discount = await discountModel.find({});
+    //         const matched = book.filter((item) => {
+    //             discount.filter((product) =>
+    //                 item._id.toString() === product.
+    //                     productId.toString()
+
+    //             )
+    //         })
+    //         console.log(matched)
+
+    //     } catch (error) {
+    //         console.log(error);
+    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "internal Server Error!");
+
+    //     }
+    // }
+    async discount(req, res) {
+        try {
+            const currentDate = new Date();
+            const books = await bookModel.find({});
+            const discounts = await discountModel.find({});
+
+            const matched = books.filter(book => {
+                return discounts.some(product => book._id.toString() === product.productId.toString());
+            });
+
+            // console.log(matched);
+            const result = matched.filter(item => {
+                return currentDate >= item.discountStart && currentDate <= item.discountEnd;
+            });
+            console.log(result.length)
+            if (result.length > 0) {
+                return sendResponse(res, HTTP_STATUS.OK, "Data found!", result)
+            }
+            return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Nothing to show");
+
+        } catch (error) {
+            console.log(error);
+            return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+        }
+    }
+
+
+
 
 
 

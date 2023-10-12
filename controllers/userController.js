@@ -318,6 +318,8 @@ class user {
         try {
             const { bookId } = req.query;
             const findReview = await reviewModel.find({ bookId: bookId })
+                .populate("bookId")
+                .populate("userId");
             if (findReview.length > 0) {
                 return sendResponse(res, HTTP_STATUS.OK, "Review Found!", findReview);
             }

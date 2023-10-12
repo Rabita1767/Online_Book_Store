@@ -19,5 +19,6 @@ routes.patch("/updateDiscount", auth.auth, validation.updateDiscount, adminContr
 routes.get("/viewAllTransaction", auth.auth, auth.isRole, auth.isSuper, adminController.viewAllTransaction);
 routes.post("/updateProfile", auth.auth, validation.updateProfile, adminController.updateProfile);
 routes.get("/getAllUser", adminController.getAllUser)
-routes.get("/getUserById",adminController.getUserById)
+routes.get("/getUserById", adminController.getUserById)
+routes.get("/getBookById", adminController.getBookById);
 module.exports = routes;
