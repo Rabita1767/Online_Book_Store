@@ -221,21 +221,56 @@ class Auth {
 
     //     }
     // }
+    // async discount(req, res) {
+    //     try {
+    //         const currentDate = new Date();
+    //         const books = await bookModel.find({});
+    //         const discounts = await discountModel.find({});
+
+    //         const matched = books.filter(book => {
+    //             return discounts.some(product => book._id.toString() === product.productId.toString());
+    //         });
+
+    //         // console.log(matched);
+    //         const result = matched.filter(item => {
+    //             return currentDate >= item.discountStart && currentDate <= item.discountEnd;
+    //         });
+    //         console.log(result.length)
+    //         if (result.length > 0) {
+    //             return sendResponse(res, HTTP_STATUS.OK, "Data found!", result)
+    //         }
+    //         return sendResponse(res, HTTP_STATUS.NOT_FOUND, "Nothing to show");
+
+    //     } catch (error) {
+    //         console.log(error);
+    //         return sendResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Internal Server Error!");
+    //     }
+    // }
     async discount(req, res) {
         try {
             const currentDate = new Date();
-            const books = await bookModel.find({});
+            // const books = await bookModel.find({});
             const discounts = await discountModel.find({});
 
-            const matched = books.filter(book => {
-                return discounts.some(product => book._id.toString() === product.productId.toString());
-            });
+            // const matched = books.filter(book => {
+            //     return discounts.some(product => book._id.toString() === product.productId.toString());
+            // });
 
             // console.log(matched);
-            const result = matched.filter(item => {
-                return currentDate >= item.discountStart && currentDate <= item.discountEnd;
-            });
-            console.log(result.length)
+            // const result = matched.filter(item => {
+            //     return currentDate >= item.discountStart && currentDate <= item.discountEnd;
+            // });
+            // console.log(result.length)
+            const result = [];
+            discounts.filter((item) => {
+                if (currentDate >= item.discountStart && currentDate <= item.discountEnd) {
+                    console.log(item.discountStart)
+                    console.log(item.discountEnd)
+                    console.log(currentDate)
+                    result.push(item);
+
+                }
+            })
             if (result.length > 0) {
                 return sendResponse(res, HTTP_STATUS.OK, "Data found!", result)
             }
