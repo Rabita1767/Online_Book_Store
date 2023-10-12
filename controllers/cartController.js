@@ -221,7 +221,7 @@ class cart {
                         console.log(` ${total}`)
                         if (currentDate >= y.discountStart && currentDate <= y.discountEnd) {
                             total += y.discountPrice * x.quantity;
-                            console.log(`yoo ${total}`)
+                            console.log(`total ${total}`)
                         }
                         else {
                             total += y.price * x.quantity;
